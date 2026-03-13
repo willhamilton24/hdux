@@ -33,6 +33,9 @@ export type {
   BlinkConfig,
 } from "./components/Box";
 
+export { Button } from "./components/Button";
+export type { ButtonProps } from "./components/Button";
+
 export { Text } from "./components/Text";
 export type {
   TextProps,
