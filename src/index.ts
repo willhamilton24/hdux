@@ -47,10 +47,12 @@ export {
   BarCenter,
   BarRight,
   BarElement,
+  ThemeSelector,
 } from "./components/Bar";
 export type {
   TopBarProps,
   BottomBarProps,
   BarSectionProps,
   BarElementProps,
+  ThemeSelectorProps,
 } from "./components/Bar";
