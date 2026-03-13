@@ -53,6 +53,13 @@ export function useBoxAnimation({
     animation === "static" ? "settled" : "idle"
   );
   const timeouts = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const hasTransitioned = useRef(false);
+  // Keep refs for object/optional deps so the transition effect
+  // doesn't re-fire when a new object reference is passed.
+  const loadingAnimationsRef = useRef(loadingAnimations);
+  loadingAnimationsRef.current = loadingAnimations;
+  const fullBorderRef = useRef(fullBorder);
+  fullBorderRef.current = fullBorder;
 
   const scheduleTimeout = useCallback((fn: () => void, ms: number) => {
     const id = setTimeout(fn, ms);
@@ -78,13 +85,19 @@ export function useBoxAnimation({
   // Start loading phase when not static and not yet loaded
   useEffect(() => {
     if (animation !== "static" && !hasLoaded) {
+      hasTransitioned.current = false;
       setPhase("loading");
     }
   }, [animation, hasLoaded]);
 
-  // Trigger the transition sequence when hasLoaded becomes true
+  // Trigger the transition sequence once when hasLoaded becomes true
   useEffect(() => {
     if (animation === "static" || !hasLoaded) return;
+    if (hasTransitioned.current) return;
+    hasTransitioned.current = true;
+
+    const anims = loadingAnimationsRef.current;
+    const border = fullBorderRef.current;
 
     // Clear any pending timeouts from previous runs
     timeouts.current.forEach(clearTimeout);
@@ -93,8 +106,8 @@ export function useBoxAnimation({
     let elapsed = 0;
 
     // Phase: text-blink
-    const textBlinkIter = loadingAnimations?.textBlink
-      ? clampIterations(loadingAnimations.textBlink.iterations)
+    const textBlinkIter = anims?.textBlink
+      ? clampIterations(anims.textBlink.iterations)
       : 0;
     if (textBlinkIter > 0) {
       scheduleTimeout(() => setPhase("text-blink"), elapsed);
@@ -102,8 +115,8 @@ export function useBoxAnimation({
     }
 
     // Phase: corner-blink-start
-    const cornerBlinkStartIter = loadingAnimations?.cornerBlinkStart
-      ? clampIterations(loadingAnimations.cornerBlinkStart.iterations)
+    const cornerBlinkStartIter = anims?.cornerBlinkStart
+      ? clampIterations(anims.cornerBlinkStart.iterations)
       : 0;
     if (cornerBlinkStartIter > 0) {
       scheduleTimeout(() => setPhase("corner-blink-start"), elapsed);
@@ -124,8 +137,8 @@ export function useBoxAnimation({
     }
 
     // Phase: corner-blink-end
-    const cornerBlinkEndIter = loadingAnimations?.cornerBlinkEnd
-      ? clampIterations(loadingAnimations.cornerBlinkEnd.iterations)
+    const cornerBlinkEndIter = anims?.cornerBlinkEnd
+      ? clampIterations(anims.cornerBlinkEnd.iterations)
       : 0;
     if (cornerBlinkEndIter > 0) {
       scheduleTimeout(() => setPhase("corner-blink-end"), elapsed);
@@ -137,14 +150,14 @@ export function useBoxAnimation({
     elapsed += CONTENT_FADE;
 
     // Phase: full-border (if enabled)
-    if (fullBorder) {
+    if (border) {
       scheduleTimeout(() => setPhase("full-border"), elapsed + FULL_BORDER_DELAY);
       elapsed += FULL_BORDER_DELAY + 300; // 300ms for border extend transition
     }
 
     // Phase: settled
     scheduleTimeout(() => setPhase("settled"), elapsed);
-  }, [animation, hasLoaded, loadingAnimations, fullBorder, scheduleTimeout]);
+  }, [animation, hasLoaded, scheduleTimeout]);
 
   // Derive output from current phase
   const isLoading = phase === "idle" || phase === "loading";
