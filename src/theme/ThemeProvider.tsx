@@ -138,9 +138,18 @@ export function HduxThemeProvider({
     [theme, mode, availableModes]
   );
 
-  // Register CSS color properties on mount for smooth transitions
+  // Register CSS color properties on mount and load default font
   useEffect(() => {
     registerColorProperties();
+
+    // Inject Quantico from Google Fonts if not already present
+    if (!document.querySelector('link[href*="Quantico"]')) {
+      const link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href =
+        "https://fonts.googleapis.com/css2?family=Quantico:ital,wght@0,400;0,700;1,400;1,700&display=swap";
+      document.head.appendChild(link);
+    }
   }, []);
 
   return (

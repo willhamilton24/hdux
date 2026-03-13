@@ -176,7 +176,7 @@ const threeModeConfig: HduxThemeConfig = {
     mainColor: "#333",
     background: "#fff",
     typography: {
-      mainFont: '"Inter", system-ui, sans-serif',
+      mainFont: '"Quantico", system-ui, sans-serif',
     },
     borderWidth: "2px",
     boxCorners: { length: "16px" },

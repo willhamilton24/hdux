@@ -11,7 +11,7 @@ export const defaultLightTheme: HduxMasterTheme = {
     loading: "#1565c0",
   },
   typography: {
-    mainFont: '"Inter", system-ui, -apple-system, sans-serif',
+    mainFont: '"Quantico", system-ui, -apple-system, sans-serif',
     variants: {},
   },
   borderWidth: "2px",
@@ -31,7 +31,7 @@ export const defaultDarkTheme: HduxMasterTheme = {
     loading: "#42a5f5",
   },
   typography: {
-    mainFont: '"Inter", system-ui, -apple-system, sans-serif',
+    mainFont: '"Quantico", system-ui, -apple-system, sans-serif',
     variants: {},
   },
   borderWidth: "2px",

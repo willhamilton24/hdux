@@ -17,7 +17,7 @@ const meta: Meta<typeof Text> = {
             mainColor: "#00d4ff",
             textColor: "#e0e0e0",
             background: "#0a0a1a",
-            typography: { mainFont: '"Inter", system-ui, sans-serif' },
+            typography: { mainFont: '"Quantico", system-ui, sans-serif' },
             borderWidth: "2px",
             boxCorners: { length: "12px" },
           },
