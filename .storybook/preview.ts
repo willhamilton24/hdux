@@ -1,7 +1,24 @@
 import type { Preview } from '@storybook/react-vite'
 
+// Remove default white background so HDUX themes fill the viewport
+const style = document.createElement('style');
+style.textContent = `
+  html, body, #storybook-root {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    min-height: 100vh;
+    background: transparent !important;
+  }
+  #storybook-root > * {
+    min-height: 100vh;
+  }
+`;
+document.head.appendChild(style);
+
 const preview: Preview = {
   parameters: {
+    layout: 'fullscreen',
     controls: {
       matchers: {
        color: /(background|color)$/i,
