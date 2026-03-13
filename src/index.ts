@@ -39,3 +39,18 @@ export type {
   TextAnimation,
   TextVariant,
 } from "./components/Text";
+
+export {
+  TopBar,
+  BottomBar,
+  BarLeft,
+  BarCenter,
+  BarRight,
+  BarElement,
+} from "./components/Bar";
+export type {
+  TopBarProps,
+  BottomBarProps,
+  BarSectionProps,
+  BarElementProps,
+} from "./components/Bar";

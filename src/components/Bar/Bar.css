@@ -1,0 +1,117 @@
+/* ── Shared bar layout ──────────────────────────────── */
+
+.hdux-bar {
+  display: flex;
+  align-items: stretch;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  font-family: var(--hdux-font-main, inherit);
+  color: var(--hdux-text-color, inherit);
+  background: var(--hdux-bar-bg, var(--hdux-background, #000));
+  box-sizing: border-box;
+  min-height: 48px;
+  padding: 0;
+}
+
+.hdux-bar--fixed {
+  position: fixed;
+}
+
+.hdux-bar--static {
+  position: relative;
+}
+
+/* ── TopBar ─────────────────────────────────────────── */
+
+.hdux-bar--top {
+  top: 0;
+  border-bottom: var(--hdux-bar-border-width, var(--hdux-border-width, 2px))
+    solid var(--hdux-bar-color, var(--hdux-main-color, #fff));
+}
+
+/* ── BottomBar ──────────────────────────────────────── */
+
+.hdux-bar--bottom {
+  bottom: 0;
+  border-top: var(--hdux-bar-border-width, var(--hdux-border-width, 2px))
+    solid var(--hdux-bar-color, var(--hdux-main-color, #fff));
+}
+
+/* ── Bar sections ───────────────────────────────────── */
+
+.hdux-bar-section {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  flex: 0 0 auto;
+}
+
+.hdux-bar-section--left {
+  justify-content: flex-start;
+  margin-right: auto;
+}
+
+.hdux-bar-section--center {
+  justify-content: center;
+  flex: 1 1 auto;
+}
+
+.hdux-bar-section--right {
+  justify-content: flex-end;
+  margin-left: auto;
+}
+
+/* When center exists alongside left or right, keep it truly centered */
+.hdux-bar--has-left.hdux-bar--has-center .hdux-bar-section--left,
+.hdux-bar--has-right.hdux-bar--has-center .hdux-bar-section--right {
+  flex: 1 1 0;
+}
+.hdux-bar--has-left.hdux-bar--has-center .hdux-bar-section--center,
+.hdux-bar--has-right.hdux-bar--has-center .hdux-bar-section--center {
+  flex: 0 0 auto;
+}
+
+/* ── BarElement ─────────────────────────────────────── */
+
+.hdux-bar-element {
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  background: var(--hdux-bar-element-bg, transparent);
+  color: var(--hdux-bar-element-text-color, var(--hdux-text-color, inherit));
+  border-left: var(--hdux-bar-border-width, var(--hdux-border-width, 2px))
+    solid var(--hdux-bar-element-color, var(--hdux-bar-color, var(--hdux-main-color, #fff)));
+  border-right: var(--hdux-bar-border-width, var(--hdux-border-width, 2px))
+    solid var(--hdux-bar-element-color, var(--hdux-bar-color, var(--hdux-main-color, #fff)));
+  font-family: var(--hdux-font-main, inherit);
+  font-size: 14px;
+  white-space: nowrap;
+  box-sizing: border-box;
+  min-height: 100%;
+}
+
+.hdux-bar-element--borderless {
+  border-left: none;
+  border-right: none;
+}
+
+.hdux-bar-element--clickable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.hdux-bar-element--clickable:hover {
+  background: var(
+    --hdux-bar-element-color,
+    var(--hdux-bar-color, var(--hdux-main-color, #fff))
+  );
+  color: var(--hdux-bar-bg, var(--hdux-background, #000));
+}
+
+/* Collapse adjacent borders between BarElements */
+.hdux-bar-element + .hdux-bar-element {
+  margin-left: calc(
+    -1 * var(--hdux-bar-border-width, var(--hdux-border-width, 2px))
+  );
+}
