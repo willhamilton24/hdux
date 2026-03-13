@@ -1,0 +1,192 @@
+/* ── Box layout ──────────────────────────────────────── */
+
+.hdux-box {
+  position: relative;
+  box-sizing: border-box;
+}
+
+/* ── Corner pieces ──────────────────────────────────── */
+
+.hdux-box-corner {
+  position: absolute;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.hdux-box-corner-h,
+.hdux-box-corner-v {
+  position: absolute;
+  background: var(--hdux-box-corner-color);
+}
+
+/* Top-left corner arms */
+.hdux-box-corner--tl .hdux-box-corner-h {
+  top: 0; left: 0;
+  width: var(--hdux-box-corner-len);
+  height: var(--hdux-box-corner-wid);
+}
+.hdux-box-corner--tl .hdux-box-corner-v {
+  top: 0; left: 0;
+  width: var(--hdux-box-corner-wid);
+  height: var(--hdux-box-corner-len);
+}
+
+/* Top-right corner arms */
+.hdux-box-corner--tr .hdux-box-corner-h {
+  top: 0; right: 0;
+  width: var(--hdux-box-corner-len);
+  height: var(--hdux-box-corner-wid);
+}
+.hdux-box-corner--tr .hdux-box-corner-v {
+  top: 0; right: 0;
+  width: var(--hdux-box-corner-wid);
+  height: var(--hdux-box-corner-len);
+}
+
+/* Bottom-left corner arms */
+.hdux-box-corner--bl .hdux-box-corner-h {
+  bottom: 0; left: 0;
+  width: var(--hdux-box-corner-len);
+  height: var(--hdux-box-corner-wid);
+}
+.hdux-box-corner--bl .hdux-box-corner-v {
+  bottom: 0; left: 0;
+  width: var(--hdux-box-corner-wid);
+  height: var(--hdux-box-corner-len);
+}
+
+/* Bottom-right corner arms */
+.hdux-box-corner--br .hdux-box-corner-h {
+  bottom: 0; right: 0;
+  width: var(--hdux-box-corner-len);
+  height: var(--hdux-box-corner-wid);
+}
+.hdux-box-corner--br .hdux-box-corner-v {
+  bottom: 0; right: 0;
+  width: var(--hdux-box-corner-wid);
+  height: var(--hdux-box-corner-len);
+}
+
+/* ── Full border lines ──────────────────────────────── */
+
+.hdux-box-border {
+  position: absolute;
+  background: var(--hdux-box-corner-color);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.hdux-box-border--top,
+.hdux-box-border--bottom {
+  left: var(--hdux-box-corner-len);
+  right: var(--hdux-box-corner-len);
+  height: var(--hdux-box-corner-wid);
+  transform: scaleX(0);
+  transition: transform 300ms ease-out;
+}
+.hdux-box-border--top    { top: 0; }
+.hdux-box-border--bottom { bottom: 0; }
+
+.hdux-box-border--left,
+.hdux-box-border--right {
+  top: var(--hdux-box-corner-len);
+  bottom: var(--hdux-box-corner-len);
+  width: var(--hdux-box-corner-wid);
+  transform: scaleY(0);
+  transition: transform 300ms ease-out;
+}
+.hdux-box-border--left  { left: 0; }
+.hdux-box-border--right { right: 0; }
+
+.hdux-box-border--visible.hdux-box-border--top,
+.hdux-box-border--visible.hdux-box-border--bottom {
+  transform: scaleX(1);
+}
+.hdux-box-border--visible.hdux-box-border--left,
+.hdux-box-border--visible.hdux-box-border--right {
+  transform: scaleY(1);
+}
+
+/* ── Loading text ───────────────────────────────────── */
+
+.hdux-box-loading-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  white-space: nowrap;
+  font-family: var(--hdux-font-main, inherit);
+  color: var(--hdux-box-text-color);
+  letter-spacing: 0.15em;
+  font-size: 14px;
+  pointer-events: none;
+  transition: opacity 200ms ease-out;
+}
+
+/* ── Content ────────────────────────────────────────── */
+
+.hdux-box-content {
+  position: relative;
+  z-index: 0;
+  transition: opacity 250ms ease-in;
+}
+
+/* ── Keyframe animations ────────────────────────────── */
+
+@keyframes hdux-box-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.2; }
+}
+
+@keyframes hdux-box-blink {
+  0%, 40% { opacity: 1; }
+  50%, 90% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+/* Corner spin: each corner gets a staggered delay */
+@keyframes hdux-box-corner-spin {
+  0%, 100% { opacity: 1; }
+  12.5%, 87.5% { opacity: 0.15; }
+}
+
+/* ── Loading animation classes ──────────────────────── */
+
+.hdux-box--text-pulse .hdux-box-loading-text {
+  animation: hdux-box-pulse var(--hdux-box-pulse-duration, 1200ms) ease-in-out infinite;
+  animation-delay: var(--hdux-box-pulse-delay, 0ms);
+}
+
+.hdux-box--corner-pulse .hdux-box-corner {
+  animation: hdux-box-pulse var(--hdux-box-corner-pulse-duration, 1200ms) ease-in-out infinite;
+  animation-delay: var(--hdux-box-corner-pulse-delay, 0ms);
+}
+
+.hdux-box--corner-spin .hdux-box-corner--tl {
+  animation: hdux-box-corner-spin var(--hdux-box-spin-duration, 1600ms) ease-in-out infinite;
+  animation-delay: 0ms;
+}
+.hdux-box--corner-spin .hdux-box-corner--tr {
+  animation: hdux-box-corner-spin var(--hdux-box-spin-duration, 1600ms) ease-in-out infinite;
+  animation-delay: calc(var(--hdux-box-spin-duration, 1600ms) * 0.25);
+}
+.hdux-box--corner-spin .hdux-box-corner--br {
+  animation: hdux-box-corner-spin var(--hdux-box-spin-duration, 1600ms) ease-in-out infinite;
+  animation-delay: calc(var(--hdux-box-spin-duration, 1600ms) * 0.5);
+}
+.hdux-box--corner-spin .hdux-box-corner--bl {
+  animation: hdux-box-corner-spin var(--hdux-box-spin-duration, 1600ms) ease-in-out infinite;
+  animation-delay: calc(var(--hdux-box-spin-duration, 1600ms) * 0.75);
+}
+
+.hdux-box--text-blink .hdux-box-loading-text {
+  animation: hdux-box-blink 240ms ease-in-out var(--hdux-box-text-blink-iterations, 1);
+}
+
+.hdux-box--corner-blink .hdux-box-corner {
+  animation: hdux-box-blink 240ms ease-in-out var(--hdux-box-corner-blink-iterations, 1);
+}
+
+.hdux-box--content-blink .hdux-box-content {
+  animation: hdux-box-blink 240ms ease-in-out var(--hdux-box-content-blink-iterations, 1);
+}

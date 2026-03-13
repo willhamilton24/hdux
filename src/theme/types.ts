@@ -22,6 +22,7 @@ export interface HduxTypographyVariants {
   h4?: string;
   h5?: string;
   h6?: string;
+  subheading?: string;
   body?: string;
   caption?: string;
   code?: string;

@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { HduxThemeProvider } from "./ThemeProvider";
 import { useTheme } from "./useTheme";
-import type { HduxThemeConfig, HduxResolvedTheme } from "./types";
+import { Box } from "../components/Box";
+import type { HduxThemeConfig } from "./types";
 
 const meta: Meta<typeof HduxThemeProvider> = {
   title: "HDUX/Theme",
@@ -97,63 +98,33 @@ function ThemeDemoPanel() {
         </div>
       </div>
 
-      <h3>Sample Card</h3>
-      <SampleCard theme={theme} />
-    </div>
-  );
-}
-
-function SampleCard({ theme }: { theme: HduxResolvedTheme }) {
-  return (
-    <div
-      style={{
-        border: `var(--hdux-border-width) solid var(--hdux-main-color)`,
-        padding: 20,
-        maxWidth: 400,
-        position: "relative",
-      }}
-    >
-      {/* Box corner decorations */}
-      {(["topLeft", "topRight", "bottomLeft", "bottomRight"] as const).map(
-        (corner) => {
-          const isTop = corner.includes("top");
-          const isLeft = corner.includes("Left");
-          return (
-            <div
-              key={corner}
-              style={{
-                position: "absolute",
-                [isTop ? "top" : "bottom"]: -1,
-                [isLeft ? "left" : "right"]: -1,
-                width: `var(--hdux-box-corner-length)`,
-                height: `var(--hdux-box-corner-length)`,
-                [`border${isTop ? "Top" : "Bottom"}`]: `var(--hdux-box-corner-width) solid var(--hdux-main-color)`,
-                [`border${isLeft ? "Left" : "Right"}`]: `var(--hdux-box-corner-width) solid var(--hdux-main-color)`,
-              }}
-            />
-          );
-        }
-      )}
-      <h4 style={{ margin: "0 0 8px" }}>HDUX Card</h4>
-      <p style={{ margin: 0, opacity: 0.8 }}>
-        This card uses theme tokens for its border, corner decorations, colors,
-        and typography. Switch modes to see the smooth transition.
-      </p>
-      <div style={{ marginTop: 16, display: "flex", gap: 8 }}>
-        {(["success", "failure", "caution", "loading"] as const).map((key) => (
-          <span
-            key={key}
-            style={{
-              padding: "4px 10px",
-              fontSize: 12,
-              border: `1px solid ${theme.customColors[key]}`,
-              color: theme.customColors[key],
-            }}
-          >
-            {key}
-          </span>
-        ))}
-      </div>
+      <h3>Sample Box</h3>
+      <Box animation="static" fullBorder style={{ maxWidth: 400 }}>
+        <div style={{ padding: 20 }}>
+          <h4 style={{ margin: "0 0 8px" }}>HDUX Box</h4>
+          <p style={{ margin: 0, opacity: 0.8 }}>
+            This Box uses theme tokens for its corners, colors, and typography.
+            Switch modes to see the smooth transition.
+          </p>
+          <div style={{ marginTop: 16, display: "flex", gap: 8 }}>
+            {(["success", "failure", "caution", "loading"] as const).map(
+              (key) => (
+                <span
+                  key={key}
+                  style={{
+                    padding: "4px 10px",
+                    fontSize: 12,
+                    border: `1px solid ${theme.customColors[key]}`,
+                    color: theme.customColors[key],
+                  }}
+                >
+                  {key}
+                </span>
+              )
+            )}
+          </div>
+        </div>
+      </Box>
     </div>
   );
 }

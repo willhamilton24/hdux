@@ -1,0 +1,65 @@
+/* ── Text base ──────────────────────────────────────── */
+
+.hdux-text {
+  margin: 0;
+  padding: 0;
+  line-height: 1.5;
+}
+
+/* ── Print animation ────────────────────────────────── */
+
+.hdux-text--print .hdux-text-char {
+  opacity: 0;
+}
+
+.hdux-text--print.hdux-text--animating .hdux-text-char {
+  opacity: 0;
+}
+
+.hdux-text--print .hdux-text-char--visible {
+  opacity: 1;
+}
+
+/* ── Sweep animation ────────────────────────────────── */
+
+@keyframes hdux-text-sweep {
+  from {
+    mask-position: 0% 0%;
+    -webkit-mask-position: 0% 0%;
+  }
+  to {
+    mask-position: 100% 100%;
+    -webkit-mask-position: 100% 100%;
+  }
+}
+
+.hdux-text--sweep {
+  opacity: 0;
+}
+
+.hdux-text--sweep.hdux-text--animating {
+  opacity: 1;
+  mask-image: linear-gradient(
+    135deg,
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 1) 40%,
+    rgba(0, 0, 0, 0) 60%,
+    rgba(0, 0, 0, 0) 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    135deg,
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 1) 40%,
+    rgba(0, 0, 0, 0) 60%,
+    rgba(0, 0, 0, 0) 100%
+  );
+  mask-size: 300% 300%;
+  -webkit-mask-size: 300% 300%;
+  animation: hdux-text-sweep var(--hdux-text-sweep-duration, 600ms) ease-out forwards;
+}
+
+.hdux-text--sweep.hdux-text--settled {
+  opacity: 1;
+  mask-image: none;
+  -webkit-mask-image: none;
+}
