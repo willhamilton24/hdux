@@ -48,6 +48,27 @@ export interface BarElementProps {
   style?: CSSProperties;
 }
 
+export interface NavbarItem {
+  key: string;
+  label: string;
+}
+
+export interface NavbarProps {
+  items: NavbarItem[];
+  /** Key of the active page */
+  active?: string;
+  /** Called when a nav item is clicked */
+  onNavigate?: (key: string) => void;
+  /** Override corner color for the active indicator */
+  cornerColor?: string;
+  /** Override text color */
+  textColor?: string;
+  /** Remove side borders on the outer element */
+  borderless?: boolean;
+  className?: string;
+  style?: CSSProperties;
+}
+
 export interface BarButtonProps {
   children?: ReactNode;
   /** Override border color (defaults to parent bar color / theme mainColor) */

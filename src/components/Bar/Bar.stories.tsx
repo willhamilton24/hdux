@@ -6,6 +6,7 @@ import { BottomBar } from "./BottomBar";
 import { BarLeft, BarCenter, BarRight } from "./BarSections";
 import { BarElement } from "./BarElement";
 import { BarButton } from "./BarButton";
+import { Navbar } from "./Navbar";
 
 const meta: Meta = {
   title: "HDUX/Components/Bar",
@@ -32,6 +33,49 @@ const meta: Meta = {
 export default meta;
 
 type Story = StoryObj;
+
+/* ── Navbar ────────────────────────────────────────── */
+
+const NAV_ITEMS = [
+  { key: "dashboard", label: "DASHBOARD" },
+  { key: "reports", label: "REPORTS" },
+  { key: "analytics", label: "ANALYTICS" },
+  { key: "settings", label: "SETTINGS" },
+];
+
+export const NavbarBasic: Story = {
+  name: "Navbar",
+  render: () => (
+    <TopBar static>
+      <BarLeft>
+        <BarElement>
+          <Text variant="body">HDUX</Text>
+        </BarElement>
+        <Navbar items={NAV_ITEMS} active="dashboard" />
+      </BarLeft>
+      <BarRight>
+        <BarElement>
+          <Text variant="body">ADMIN</Text>
+        </BarElement>
+      </BarRight>
+    </TopBar>
+  ),
+};
+
+export const NavbarCustomColor: Story = {
+  name: "Navbar — Custom Corner Color",
+  render: () => (
+    <TopBar static>
+      <BarLeft>
+        <Navbar
+          items={NAV_ITEMS}
+          active="analytics"
+          cornerColor="#ff6f00"
+        />
+      </BarLeft>
+    </TopBar>
+  ),
+};
 
 /* ── TopBar basic ───────────────────────────────────── */
 

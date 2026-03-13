@@ -1,0 +1,86 @@
+/* ── Navbar layout ──────────────────────────────────── */
+
+.hdux-navbar {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  padding: 0 0 0 8px;
+}
+
+/* ── Nav items ─────────────────────────────────────── */
+
+.hdux-navbar-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.45em 0.7em;
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+  transition: opacity 200ms ease-out;
+}
+
+.hdux-navbar-item:hover {
+  opacity: 0.5;
+}
+
+/* ── Label wrapper (positioning context for corners) ─ */
+
+.hdux-navbar-label {
+  position: relative;
+  padding: 0.15em 0.25em;
+}
+
+/* ── Active indicator corners ──────────────────────── */
+
+.hdux-navbar-corner {
+  position: absolute;
+  pointer-events: none;
+}
+
+.hdux-navbar-corner-h,
+.hdux-navbar-corner-v {
+  position: absolute;
+  background: var(--hdux-navbar-corner-color, currentColor);
+}
+
+/* Top-left */
+.hdux-navbar-corner--tl { top: 0; left: 0; }
+.hdux-navbar-corner--tl .hdux-navbar-corner-h {
+  top: 0; left: 0; width: 0.5em; height: 0.1em;
+}
+.hdux-navbar-corner--tl .hdux-navbar-corner-v {
+  top: 0; left: 0; width: 0.1em; height: 0.5em;
+}
+
+/* Top-right */
+.hdux-navbar-corner--tr { top: 0; right: 0; }
+.hdux-navbar-corner--tr .hdux-navbar-corner-h {
+  top: 0; right: 0; width: 0.5em; height: 0.1em;
+}
+.hdux-navbar-corner--tr .hdux-navbar-corner-v {
+  top: 0; right: 0; width: 0.1em; height: 0.5em;
+}
+
+/* Bottom-left */
+.hdux-navbar-corner--bl { bottom: 0; left: 0; }
+.hdux-navbar-corner--bl .hdux-navbar-corner-h {
+  bottom: 0; left: 0; width: 0.5em; height: 0.1em;
+}
+.hdux-navbar-corner--bl .hdux-navbar-corner-v {
+  bottom: 0; left: 0; width: 0.1em; height: 0.5em;
+}
+
+/* Bottom-right */
+.hdux-navbar-corner--br { bottom: 0; right: 0; }
+.hdux-navbar-corner--br .hdux-navbar-corner-h {
+  bottom: 0; right: 0; width: 0.5em; height: 0.1em;
+}
+.hdux-navbar-corner--br .hdux-navbar-corner-v {
+  bottom: 0; right: 0; width: 0.1em; height: 0.5em;
+}
