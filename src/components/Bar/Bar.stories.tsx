@@ -5,6 +5,7 @@ import { TopBar } from "./TopBar";
 import { BottomBar } from "./BottomBar";
 import { BarLeft, BarCenter, BarRight } from "./BarSections";
 import { BarElement } from "./BarElement";
+import { BarButton } from "./BarButton";
 
 const meta: Meta = {
   title: "HDUX/Components/Bar",
@@ -120,6 +121,32 @@ export const BottomBarCentered: Story = {
         </BarElement>
       </BarCenter>
     </BottomBar>
+  ),
+};
+
+/* ── BarButton ─────────────────────────────────────── */
+
+export const BarButtons: Story = {
+  name: "BarButton",
+  render: () => (
+    <TopBar static>
+      <BarLeft>
+        <BarElement borderless>
+          <Text variant="body">HDUX</Text>
+        </BarElement>
+      </BarLeft>
+      <BarRight>
+        <BarButton onClick={() => console.log("Deploy")}>
+          <Text variant="body">DEPLOY</Text>
+        </BarButton>
+        <BarButton onClick={() => console.log("Sync")}>
+          <Text variant="body">SYNC</Text>
+        </BarButton>
+        <BarButton onClick={() => console.log("Abort")} color="#ff1744" textColor="#ff1744">
+          <Text variant="body" color="#ff1744">ABORT</Text>
+        </BarButton>
+      </BarRight>
+    </TopBar>
   ),
 };
 

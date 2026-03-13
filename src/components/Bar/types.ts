@@ -47,3 +47,19 @@ export interface BarElementProps {
   className?: string;
   style?: CSSProperties;
 }
+
+export interface BarButtonProps {
+  children?: ReactNode;
+  /** Override border color (defaults to parent bar color / theme mainColor) */
+  color?: string;
+  /** Override text color (defaults to theme textColor) */
+  textColor?: string;
+  /** Background color (defaults to transparent) */
+  background?: string;
+  /** Remove side borders */
+  borderless?: boolean;
+  /** Click handler */
+  onClick?: () => void;
+  className?: string;
+  style?: CSSProperties;
+}

@@ -109,9 +109,42 @@
   color: var(--hdux-bar-bg, var(--hdux-background, #000));
 }
 
-/* Collapse adjacent borders between BarElements */
+/* Deconflict adjacent borders: the earlier element's right border wins */
 .hdux-bar-element + .hdux-bar-element {
-  margin-left: calc(
-    -1 * var(--hdux-bar-border-width, var(--hdux-border-width, 2px))
-  );
+  border-left: none;
+}
+
+/* In BarRight, invert: the later element's left border wins */
+.hdux-bar-section--right > .hdux-bar-element + .hdux-bar-element {
+  border-left: var(--hdux-bar-border-width, var(--hdux-border-width, 2px))
+    solid var(--hdux-bar-element-color, var(--hdux-bar-color, var(--hdux-main-color, #fff)));
+}
+.hdux-bar-section--right > .hdux-bar-element:has(+ .hdux-bar-element) {
+  border-right: none;
+}
+
+/* ── BarButton ─────────────────────────────────────── */
+
+.hdux-bar-button {
+  cursor: pointer;
+  user-select: none;
+  border-top: none;
+  border-bottom: none;
+  transition: opacity 200ms ease-out;
+}
+
+.hdux-bar-button:hover {
+  opacity: 0.5;
+}
+
+.hdux-bar-button--pulsing {
+  animation: hdux-bar-button-pulse 400ms ease-out;
+}
+
+@keyframes hdux-bar-button-pulse {
+  0%   { opacity: 1; }
+  25%  { opacity: 0.5; }
+  50%  { opacity: 1; }
+  75%  { opacity: 0.5; }
+  100% { opacity: 1; }
 }

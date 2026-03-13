@@ -50,6 +50,7 @@ export {
   BarCenter,
   BarRight,
   BarElement,
+  BarButton,
   ThemeSelector,
 } from "./components/Bar";
 export type {
@@ -57,5 +58,6 @@ export type {
   BottomBarProps,
   BarSectionProps,
   BarElementProps,
+  BarButtonProps,
   ThemeSelectorProps,
 } from "./components/Bar";
