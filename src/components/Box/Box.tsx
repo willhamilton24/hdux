@@ -21,6 +21,7 @@ export function Box({
   cornerWidth,
   loadingAnimations,
   fullBorder = false,
+  noPadding = false,
   children,
   className,
   style,
@@ -133,6 +134,7 @@ export function Box({
   }
 
   const rootClasses = ["hdux-box", ...cssClasses];
+  if (noPadding) rootClasses.push("hdux-box--no-padding");
   if (className) rootClasses.push(className);
 
   const boxContextValue = useMemo(() => ({ phase }), [phase]);

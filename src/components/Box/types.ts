@@ -58,6 +58,8 @@ export interface BoxProps {
   loadingAnimations?: CornerBoxLoadingAnimationConfig;
   /** Extend corner lines to form a full border after animations settle */
   fullBorder?: boolean;
+  /** Remove default content padding */
+  noPadding?: boolean;
   children?: ReactNode;
   /** To be developed */
   errorText?: string;
