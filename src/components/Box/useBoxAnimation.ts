@@ -67,11 +67,15 @@ export function useBoxAnimation({
     return id;
   }, []);
 
-  // Cleanup on unmount
+  // Cleanup on unmount. Refs persist across React 18 StrictMode's
+  // simulated unmount/remount, so resetting `hasTransitioned` here lets the
+  // remount actually re-schedule the transition. Without this, every Box
+  // sticks in its loading state in dev.
   useEffect(() => {
     return () => {
       timeouts.current.forEach(clearTimeout);
       timeouts.current = [];
+      hasTransitioned.current = false;
     };
   }, []);
 

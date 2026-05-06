@@ -3,6 +3,11 @@
 .hdux-box {
   position: relative;
   box-sizing: border-box;
+  /* Column flex so the in-flow content slot can stretch to fill the box.
+     Corners and loading text are position:absolute, so they don't
+     participate in this layout. */
+  display: flex;
+  flex-direction: column;
 }
 
 /* ── Corner pieces ──────────────────────────────────── */
@@ -129,6 +134,16 @@
   position: relative;
   z-index: 0;
   padding: var(--hdux-box-corner-len, 12px);
+  /* Fill the box in both dimensions, and forward column-flex to children
+     so consumers can put `flex: 1` on a child to make it grow. The
+     min-width/height: 0 pair is the standard flex-shrink fix that lets
+     overflow content (e.g., long text, scrollable regions) shrink below
+     its intrinsic size instead of bursting the box. */
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
   transition: opacity 250ms ease-in;
 }
 
