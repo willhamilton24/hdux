@@ -1,4 +1,6 @@
 # HDUX — Hamilton Dynamic User Experience
+![Concept](https://img.shields.io/badge/Concept-C-yellow) ![Effort to Cashflow](https://img.shields.io/badge/Effort_to_Cashflow-45%2F100-yellow)
+
 
 A React component framework for building dynamic, animated user interfaces with a distinctive sci-fi aesthetic.
 
@@ -174,3 +176,15 @@ npm run typecheck       # TypeScript checking
 ## License
 
 MIT
+
+## 💰 Path to Revenue
+Open-core npm library: free base components drive adoption, paid "pro" pack (data-viz HUD widgets, dashboards, game-UI templates) sold with license keys.
+
+### Release TODOs
+- [ ] Publish v0.1 to npm and deploy the Storybook (GitHub Action already exists) as a public docs/demo site
+- [ ] Expand the component set beyond Box/Text/Bars — inputs, tables, modals, and HUD-style charts are what paying users need
+- [ ] Build 2-3 polished full-page demo templates (ops dashboard, game lobby, landing page) as the visual sales pitch
+- [ ] Create a paid Pro tier (advanced widgets + templates) gated by license key via Lemon Squeezy or Gumroad
+- [ ] Add GitHub Sponsors/Polar funding links as a secondary revenue channel
+- [ ] Launch posts with animation GIFs on r/reactjs, Hacker News, and X; submit to component-library directories
+- [ ] Archive HDUI-Prototype with a pointer here so traffic consolidates on one repo
