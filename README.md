@@ -7,7 +7,7 @@ A React component framework for building dynamic, animated user interfaces with 
 ## Installation
 
 ```bash
-npm install hdux
+npm install @hamiltondynamic/hdux
 ```
 
 **Peer dependencies:** React 18+
@@ -19,7 +19,7 @@ import {
   HduxThemeProvider,
   TopBar, BottomBar, BarLeft, BarRight, BarElement,
   Box, Text, ThemeSelector,
-} from "hdux";
+} from "@hamiltondynamic/hdux";
 
 function App() {
   return (
@@ -181,7 +181,7 @@ MIT
 Open-core npm library: free base components drive adoption, paid "pro" pack (data-viz HUD widgets, dashboards, game-UI templates) sold with license keys.
 
 ### Release TODOs
-- [ ] Publish v0.1 to npm and deploy the Storybook (GitHub Action already exists) as a public docs/demo site
+- [x] Publish v0.1 to npm and deploy the Storybook (GitHub Action already exists) as a public docs/demo site
 - [ ] Expand the component set beyond Box/Text/Bars — inputs, tables, modals, and HUD-style charts are what paying users need
 - [ ] Build 2-3 polished full-page demo templates (ops dashboard, game lobby, landing page) as the visual sales pitch
 - [ ] Create a paid Pro tier (advanced widgets + templates) gated by license key via Lemon Squeezy or Gumroad
