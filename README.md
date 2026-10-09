@@ -7,7 +7,7 @@ A React component framework for building dynamic, animated user interfaces with 
 ## Installation
 
 ```bash
-npm install hdux
+npm install @hamiltondynamic/hdux
 ```
 
 **Peer dependencies:** React 18+
@@ -19,7 +19,7 @@ import {
   HduxThemeProvider,
   TopBar, BottomBar, BarLeft, BarRight, BarElement,
   Box, Text, ThemeSelector,
-} from "hdux";
+} from "@hamiltondynamic/hdux";
 
 function App() {
   return (
