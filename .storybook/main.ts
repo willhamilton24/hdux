@@ -13,9 +13,12 @@ const config: StorybookConfig = {
     "@storybook/addon-onboarding"
   ],
   "framework": "@storybook/react-vite",
-  viteFinal: async (config) => {
-    // GitHub Pages serves this repo at /hdux/ — set Vite base to match
-    config.base = '/hdux/';
+  viteFinal: async (config, { configType }) => {
+    // GitHub Pages serves this repo at /hdux/ — set Vite base to match,
+    // but only for production builds so local dev keeps the default base
+    if (configType === 'PRODUCTION') {
+      config.base = '/hdux/';
+    }
     return config;
   },
 };
