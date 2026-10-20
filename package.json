@@ -33,8 +33,16 @@
     "hdux",
     "hamilton"
   ],
-  "author": "",
+  "author": "Will Hamilton",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/willhamilton24/hdux.git"
+  },
+  "homepage": "https://willhamilton24.github.io/hdux/",
+  "bugs": {
+    "url": "https://github.com/willhamilton24/hdux/issues"
+  },
   "peerDependencies": {
     "react": ">=18.0.0",
     "react-dom": ">=18.0.0"
