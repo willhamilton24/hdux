@@ -1,0 +1,136 @@
+/* ── Wrapper ─────────────────────────────────────────── */
+
+.hdux-input-wrapper {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 6px;
+  font-family: var(--hdux-font-main, inherit);
+}
+
+/* ── Label ───────────────────────────────────────────── */
+
+.hdux-input-label {
+  color: var(--hdux-input-color);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-family: var(--hdux-font-main, inherit);
+  cursor: default;
+}
+
+/* ── Field container (holds corners + native input) ── */
+
+.hdux-input-field {
+  position: relative;
+  display: inline-flex;
+  align-items: stretch;
+}
+
+/* ── Native input ────────────────────────────────────── */
+
+.hdux-input-el {
+  box-sizing: border-box;
+  background: transparent;
+  border: none;
+  border-bottom: var(--hdux-input-corner-wid, 2px) solid
+    color-mix(in srgb, var(--hdux-input-color) 40%, transparent);
+  outline: none;
+  color: var(--hdux-text-color, #e0e0e0);
+  font-family: var(--hdux-font-main, inherit);
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  padding-top: calc(var(--hdux-input-corner-len, 12px) - 2px);
+  padding-bottom: calc(var(--hdux-input-corner-len, 12px) - 2px);
+  padding-left: calc(var(--hdux-input-corner-len, 12px) + 6px);
+  padding-right: calc(var(--hdux-input-corner-len, 12px) + 6px);
+  min-width: 200px;
+  transition: border-color 150ms ease-out;
+}
+
+.hdux-input-el::placeholder {
+  color: var(--hdux-input-color);
+  opacity: 0.3;
+  letter-spacing: 0.08em;
+}
+
+/* ── Focus state ─────────────────────────────────────── */
+
+.hdux-input-field:focus-within .hdux-input-el {
+  border-bottom-color: var(--hdux-input-color);
+}
+
+.hdux-input-field:focus-within .hdux-input-corner-h,
+.hdux-input-field:focus-within .hdux-input-corner-v {
+  opacity: 1;
+}
+
+/* ── Corner pieces ───────────────────────────────────── */
+
+.hdux-input-corner {
+  position: absolute;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.hdux-input-corner-h,
+.hdux-input-corner-v {
+  position: absolute;
+  background: var(--hdux-input-color);
+  opacity: 0.4;
+  transition: opacity 150ms ease-out;
+}
+
+/* Top-left */
+.hdux-input-corner--tl { top: 0; left: 0; }
+.hdux-input-corner--tl .hdux-input-corner-h {
+  top: 0; left: 0;
+  width: var(--hdux-input-corner-len); height: var(--hdux-input-corner-wid);
+}
+.hdux-input-corner--tl .hdux-input-corner-v {
+  top: 0; left: 0;
+  width: var(--hdux-input-corner-wid); height: var(--hdux-input-corner-len);
+}
+
+/* Top-right */
+.hdux-input-corner--tr { top: 0; right: 0; }
+.hdux-input-corner--tr .hdux-input-corner-h {
+  top: 0; right: 0;
+  width: var(--hdux-input-corner-len); height: var(--hdux-input-corner-wid);
+}
+.hdux-input-corner--tr .hdux-input-corner-v {
+  top: 0; right: 0;
+  width: var(--hdux-input-corner-wid); height: var(--hdux-input-corner-len);
+}
+
+/* Bottom-left */
+.hdux-input-corner--bl { bottom: 0; left: 0; }
+.hdux-input-corner--bl .hdux-input-corner-h {
+  bottom: 0; left: 0;
+  width: var(--hdux-input-corner-len); height: var(--hdux-input-corner-wid);
+}
+.hdux-input-corner--bl .hdux-input-corner-v {
+  bottom: 0; left: 0;
+  width: var(--hdux-input-corner-wid); height: var(--hdux-input-corner-len);
+}
+
+/* Bottom-right */
+.hdux-input-corner--br { bottom: 0; right: 0; }
+.hdux-input-corner--br .hdux-input-corner-h {
+  bottom: 0; right: 0;
+  width: var(--hdux-input-corner-len); height: var(--hdux-input-corner-wid);
+}
+.hdux-input-corner--br .hdux-input-corner-v {
+  bottom: 0; right: 0;
+  width: var(--hdux-input-corner-wid); height: var(--hdux-input-corner-len);
+}
+
+/* ── Disabled ─────────────────────────────────────────── */
+
+.hdux-input-wrapper--disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.hdux-input-wrapper--disabled .hdux-input-el {
+  cursor: not-allowed;
+}
