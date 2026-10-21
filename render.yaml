@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: hdux-license-service
+    runtime: node
+    region: ohio
+    plan: starter
+    buildCommand: cd license-service && npm install && npm run build
+    startCommand: node license-service/dist/index.js
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: STRIPE_PRICE_ID
+        value: price_1UStJ7GRjKD6n9dmqdwh3trU
+      - key: DATABASE_URL
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
