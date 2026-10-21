@@ -1,0 +1,28 @@
+.hdux-gauge-cluster {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  font-family: var(--hdux-font-main, monospace);
+}
+
+.hdux-gauge-cluster__title {
+  font-size: 0.65rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  opacity: 0.75;
+}
+
+.hdux-gauge-cluster__grid {
+  display: grid;
+  gap: 16px;
+  justify-items: center;
+}
+
+.hdux-gauge-cluster__item {
+  display: flex;
+  justify-content: center;
+}
+
+.hdux-gauge-cluster__health {
+  padding-top: 4px;
+}

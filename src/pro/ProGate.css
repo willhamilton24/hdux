@@ -1,0 +1,48 @@
+.hdux-pro-gate {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+}
+
+.hdux-pro-gate__preview {
+  filter: blur(6px);
+  opacity: 0.3;
+  pointer-events: none;
+  user-select: none;
+}
+
+.hdux-pro-gate__overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.hdux-pro-gate__badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 24px;
+  border: 1px solid var(--hdux-color-main, #00d4ff);
+  background: color-mix(in srgb, var(--hdux-bg, #0a0a1a) 85%, transparent);
+  font-family: var(--hdux-font-main, monospace);
+}
+
+.hdux-pro-gate__title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--hdux-color-main, #00d4ff);
+}
+
+.hdux-pro-gate__sub {
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  opacity: 0.65;
+  color: var(--hdux-color-main, #00d4ff);
+  text-align: center;
+}

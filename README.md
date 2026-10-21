@@ -237,6 +237,52 @@ npm run build-storybook # static Storybook build
 npm run typecheck       # TypeScript checking
 ```
 
+## HDUX Pro
+
+Advanced widgets and full-page templates for power users, sold as a one-time license.
+
+```bash
+npm install @hamiltondynamic/hdux
+```
+
+```tsx
+import { HduxProProvider, AreaChart, DataGrid, GaugeCluster } from "@hamiltondynamic/hdux/pro";
+
+function App() {
+  return (
+    <HduxProProvider licenseKey="HDUX-PRO-XXXX-XXXX-XXXX-XXXX">
+      <AreaChart data={[12, 28, 45, 38, 60]} title="THROUGHPUT" />
+      <GaugeCluster
+        gauges={[
+          { label: "CPU", value: 68 },
+          { label: "MEM", value: 82 },
+        ]}
+      />
+      <DataGrid columns={columns} rows={rows} searchable />
+    </HduxProProvider>
+  );
+}
+```
+
+### Pro Components
+
+| Component | Description |
+|-----------|-------------|
+| `AreaChart` | Animated SVG area/line chart with multi-series support and HUD aesthetic |
+| `DataGrid` | Sortable, filterable, paginated data table |
+| `GaugeCluster` | Grid of `RadialMeter` gauges with cluster health bar |
+
+### Pro Templates
+
+| Template | Description |
+|----------|-------------|
+| `OpsDashboard` | Full-page operational dashboard (gauges + charts + event log) |
+| `GameLobby` | Game lobby interface with team view, ready state, and countdown |
+
+### License Key
+
+Wrap your app (or any subtree) in `<HduxProProvider licenseKey="…">`. The key is validated once on mount against `https://api.hdux.dev/v1/license/validate`. If the service is unreachable, any well-formed key (`HDUX-PRO-XXXX-XXXX-XXXX-XXXX`) is accepted as a fallback. Pro components without a valid provider show a gate overlay instead of the component.
+
 ## License
 
 MIT
@@ -248,7 +294,7 @@ Open-core npm library: free base components drive adoption, paid "pro" pack (dat
 - [x] Publish v0.1 to npm and deploy the Storybook (GitHub Action already exists) as a public docs/demo site
 - [x] Expand the component set beyond Box/Text/Bars — inputs, tables, modals, and HUD-style charts are what paying users need
 - [ ] Build 2-3 polished full-page demo templates (ops dashboard, game lobby, landing page) as the visual sales pitch
-- [ ] Create a paid Pro tier (advanced widgets + templates) gated by license key via Lemon Squeezy or Gumroad
+- [x] Create a paid Pro tier (advanced widgets + templates) gated by license key via Lemon Squeezy or Gumroad
 - [ ] Add GitHub Sponsors/Polar funding links as a secondary revenue channel
 - [ ] Launch posts with animation GIFs on r/reactjs, Hacker News, and X; submit to component-library directories
 - [ ] Archive HDUI-Prototype with a pointer here so traffic consolidates on one repo
