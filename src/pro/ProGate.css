@@ -46,3 +46,27 @@
   color: var(--hdux-color-main, #00d4ff);
   text-align: center;
 }
+
+.hdux-pro-gate__buy {
+  margin-top: 10px;
+  padding: 8px 20px;
+  background: transparent;
+  border: 1px solid var(--hdux-color-main, #00d4ff);
+  color: var(--hdux-color-main, #00d4ff);
+  font-family: var(--hdux-font-main, monospace);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.hdux-pro-gate__buy:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--hdux-color-main, #00d4ff) 15%, transparent);
+}
+
+.hdux-pro-gate__buy:disabled {
+  opacity: 0.5;
+  cursor: default;
+}

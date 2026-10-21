@@ -1,10 +1,44 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { useProLicense } from "./ProContext";
 import "./ProGate.css";
 
 interface ProGateProps {
   componentName: string;
   children: ReactNode;
+}
+
+const CHECKOUT_ENDPOINT = "https://api.hdux.dev/v1/checkout/session";
+
+function BuyButton() {
+  const [loading, setLoading] = useState(false);
+
+  const handleBuy = async () => {
+    setLoading(true);
+    try {
+      const here = typeof window !== "undefined" ? window.location.href : "https://hdux.dev";
+      const res = await fetch(CHECKOUT_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cancel_url: here }),
+      });
+      const data = (await res.json()) as { url?: string };
+      if (data.url && typeof window !== "undefined") {
+        window.location.href = data.url;
+      }
+    } catch {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <button
+      className="hdux-pro-gate__buy"
+      onClick={() => void handleBuy()}
+      disabled={loading}
+    >
+      {loading ? "LOADING…" : "BUY HDUX PRO →"}
+    </button>
+  );
 }
 
 /**
@@ -26,7 +60,7 @@ export function ProGate({ componentName, children }: ProGateProps) {
   const sub =
     status === "validating"
       ? null
-      : `${componentName} is a Pro component. Get a key at hdux.dev/pro`;
+      : `${componentName} is a Pro component.`;
 
   return (
     <div className="hdux-pro-gate" aria-label={`${componentName} — Pro license required`}>
@@ -37,6 +71,7 @@ export function ProGate({ componentName, children }: ProGateProps) {
         <div className="hdux-pro-gate__badge">
           <span className="hdux-pro-gate__title">{message}</span>
           {sub && <span className="hdux-pro-gate__sub">{sub}</span>}
+          {status !== "validating" && <BuyButton />}
         </div>
       </div>
     </div>
