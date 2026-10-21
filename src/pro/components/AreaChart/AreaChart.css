@@ -1,0 +1,65 @@
+.hdux-area-chart {
+  display: inline-block;
+  font-family: var(--hdux-font-main, monospace);
+}
+
+.hdux-area-chart__title {
+  font-size: 0.65rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  opacity: 0.75;
+  margin-bottom: 4px;
+  padding-left: 48px;
+}
+
+.hdux-area-chart__svg {
+  display: block;
+}
+
+.hdux-area-chart__axis-label {
+  font-family: var(--hdux-font-main, monospace);
+  letter-spacing: 0.08em;
+}
+
+.hdux-area-chart__line {
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.hdux-area-chart__line--static {
+  /* immediate render */
+}
+
+.hdux-area-chart__line--drawn {
+  animation: hdux-area-draw 900ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.hdux-area-chart__area {
+  animation: hdux-area-fade 600ms 300ms ease both;
+}
+
+.hdux-area-chart__dot {
+  animation: hdux-dot-pop 200ms ease both;
+  opacity: 0.9;
+}
+
+@keyframes hdux-area-draw {
+  from {
+    stroke-dashoffset: 1;
+    stroke-dasharray: 0 9999;
+  }
+  to {
+    stroke-dashoffset: 0;
+    stroke-dasharray: 9999 0;
+  }
+}
+
+@keyframes hdux-area-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes hdux-dot-pop {
+  from { r: 0; opacity: 0; }
+  to   { r: 2.5; opacity: 0.9; }
+}

@@ -1,0 +1,112 @@
+.hdux-game-lobby {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--hdux-bg, #06080f);
+}
+
+.hdux-game-lobby__body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 56px 24px 48px;
+  max-width: 680px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.hdux-game-lobby__match-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.hdux-game-lobby__match-details {
+  display: flex;
+  gap: 24px;
+  opacity: 0.7;
+}
+
+.hdux-game-lobby__countdown {
+  font-family: var(--hdux-font-main, monospace);
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  margin-top: 8px;
+}
+
+.hdux-game-lobby__player-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hdux-game-lobby__team {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px 0;
+}
+
+.hdux-game-lobby__team-divider {
+  border-top: 1px solid;
+  margin: 8px 0;
+  opacity: 0.3;
+}
+
+.hdux-game-lobby__player {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+  font-family: var(--hdux-font-main, monospace);
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  border-bottom: 1px solid color-mix(in srgb, var(--hdux-color-main, #00d4ff) 8%, transparent);
+}
+
+.hdux-game-lobby__player--local {
+  background: color-mix(in srgb, var(--hdux-color-main, #00d4ff) 5%, transparent);
+  padding-left: 4px;
+}
+
+.hdux-game-lobby__player-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.hdux-game-lobby__player-name {
+  flex: 1;
+  color: var(--hdux-color-main, #00d4ff);
+  opacity: 0.85;
+}
+
+.hdux-game-lobby__you {
+  opacity: 0.5;
+  font-size: 0.65rem;
+  margin-left: 4px;
+}
+
+.hdux-game-lobby__player-stat {
+  font-size: 0.65rem;
+  opacity: 0.5;
+  color: var(--hdux-color-main, #00d4ff);
+}
+
+.hdux-game-lobby__player-status-label {
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  min-width: 72px;
+  text-align: right;
+}
+
+.hdux-game-lobby__ready-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: flex-start;
+}

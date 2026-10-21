@@ -1,0 +1,132 @@
+import { useEffect, useState } from "react";
+import type { Meta, StoryObj } from "@storybook/react-vite";
+import { HduxThemeProvider } from "../../../theme/ThemeProvider";
+import { HduxProProvider } from "../../ProProvider";
+import { AreaChart } from "./AreaChart";
+
+const PRO_KEY = "HDUX-PRO-TEST-0000-0000-0000";
+
+const meta: Meta<typeof AreaChart> = {
+  title: "HDUX Pro/AreaChart",
+  component: AreaChart,
+  decorators: [
+    (Story) => (
+      <HduxThemeProvider
+        config={{
+          defaultMode: "dark",
+          master: {
+            mainColor: "#00d4ff",
+            textColor: "#e0e0e0",
+            background: "#0a0a1a",
+            typography: { mainFont: '"Quantico", system-ui, sans-serif' },
+            borderWidth: "2px",
+            boxCorners: { length: "12px" },
+          },
+        }}
+      >
+        <HduxProProvider licenseKey={PRO_KEY}>
+          <div style={{ padding: 40, background: "#0a0a1a" }}>
+            <Story />
+          </div>
+        </HduxProProvider>
+      </HduxThemeProvider>
+    ),
+  ],
+};
+export default meta;
+
+type Story = StoryObj<typeof AreaChart>;
+
+export const Default: Story = {
+  args: {
+    data: [12, 28, 45, 38, 60, 52, 71, 65, 88, 74],
+    title: "THROUGHPUT",
+    height: 160,
+  },
+};
+
+export const MultiSeries: Story = {
+  name: "Multi-Series",
+  render: () => (
+    <AreaChart
+      title="SYSTEM TELEMETRY"
+      width={560}
+      height={200}
+      series={[
+        {
+          id: "cpu",
+          label: "CPU",
+          color: "#00d4ff",
+          data: [22, 35, 55, 48, 68, 72, 60, 68, 75, 80].map((v, i) => ({
+            value: v,
+            label: `${i * 2}:00`,
+          })),
+        },
+        {
+          id: "mem",
+          label: "MEM",
+          color: "#7b2fff",
+          data: [60, 65, 70, 72, 75, 80, 82, 82, 85, 83].map((v, i) => ({
+            value: v,
+            label: `${i * 2}:00`,
+          })),
+        },
+      ]}
+    />
+  ),
+};
+
+export const Animated: Story = {
+  name: "Live Update",
+  render: () => {
+    const [data, setData] = useState<number[]>([30, 45, 38, 52, 47]);
+    useEffect(() => {
+      const id = setInterval(() => {
+        setData((prev) => [...prev.slice(-9), Math.round(20 + Math.random() * 75)]);
+      }, 1200);
+      return () => clearInterval(id);
+    }, []);
+    return (
+      <AreaChart
+        title="LIVE SIGNAL"
+        data={data}
+        color="#00e676"
+        width={480}
+        height={160}
+        animate
+        showDots
+      />
+    );
+  },
+};
+
+export const NoLicense: Story = {
+  name: "No License (gate shown)",
+  decorators: [
+    (Story) => (
+      <HduxThemeProvider
+        config={{
+          defaultMode: "dark",
+          master: {
+            mainColor: "#00d4ff",
+            textColor: "#e0e0e0",
+            background: "#0a0a1a",
+            typography: { mainFont: '"Quantico", system-ui, sans-serif' },
+            borderWidth: "2px",
+            boxCorners: { length: "12px" },
+          },
+        }}
+      >
+        {/* No HduxProProvider — should show gate */}
+        <div style={{ padding: 40, background: "#0a0a1a" }}>
+          <Story />
+        </div>
+      </HduxThemeProvider>
+    ),
+  ],
+  args: {
+    data: [12, 28, 45, 38, 60, 52, 71],
+    title: "THROUGHPUT",
+    height: 160,
+  },
+};
