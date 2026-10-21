@@ -30,26 +30,32 @@ app.post(
       return;
     }
 
-    if (event.type === 'checkout.session.completed') {
-      const session = event.data.object as Stripe.Checkout.Session;
+    try {
+      if (event.type === 'checkout.session.completed') {
+        const session = event.data.object as Stripe.Checkout.Session;
 
-      // Only issue keys for paid sessions on the HDUX Pro price
-      if (session.payment_status === 'paid') {
-        const lineItems = await stripe.checkout.sessions.listLineItems(session.id, { limit: 5 });
-        const hasPro = lineItems.data.some((item) => item.price?.id === STRIPE_PRICE_ID);
+        // Only issue keys for paid sessions on the HDUX Pro price
+        if (session.payment_status === 'paid') {
+          const lineItems = await stripe.checkout.sessions.listLineItems(session.id, { limit: 5 });
+          const hasPro = lineItems.data.some((item) => item.price?.id === STRIPE_PRICE_ID);
 
-        if (hasPro) {
-          const key = generateKey();
-          await createLicense({
-            key,
-            sessionId: session.id,
-            email: session.customer_details?.email ?? null,
-          });
+          if (hasPro) {
+            const key = generateKey();
+            await createLicense({
+              key,
+              sessionId: session.id,
+              email: session.customer_details?.email ?? null,
+            });
+          }
         }
       }
-    }
 
-    res.json({ received: true });
+      res.json({ received: true });
+    } catch (err) {
+      // 500 so Stripe retries delivery; the ON CONFLICT insert keeps retries idempotent
+      console.error('Webhook processing failed:', err);
+      res.status(500).json({ error: 'Internal error' });
+    }
   },
 );
 
@@ -62,29 +68,39 @@ app.post('/v1/license/validate', async (req, res): Promise<void> => {
     return;
   }
 
-  const normalized = body.key.toUpperCase().trim();
-  const license = await findLicenseByKey(normalized);
+  try {
+    const normalized = body.key.toUpperCase().trim();
+    const license = await findLicenseByKey(normalized);
 
-  if (!license) {
-    res.status(401).json({ error: 'License not found' });
-    return;
-  }
-  if (license.revoked_at) {
-    res.status(401).json({ error: 'License revoked' });
-    return;
-  }
+    if (!license) {
+      res.status(401).json({ error: 'License not found' });
+      return;
+    }
+    if (license.revoked_at) {
+      res.status(401).json({ error: 'License revoked' });
+      return;
+    }
 
-  res.json({ valid: true });
+    res.json({ valid: true });
+  } catch (err) {
+    console.error('License validation failed:', err);
+    res.status(500).json({ error: 'Internal error' });
+  }
 });
 
 // Checkout success page uses this to surface the key to the buyer
 app.get('/v1/license/by-session/:sessionId', async (req, res): Promise<void> => {
-  const license = await findLicenseBySession(req.params.sessionId);
-  if (!license) {
-    res.status(404).json({ error: 'No license found for this session' });
-    return;
+  try {
+    const license = await findLicenseBySession(req.params.sessionId);
+    if (!license) {
+      res.status(404).json({ error: 'No license found for this session' });
+      return;
+    }
+    res.json({ key: license.key, email: license.email });
+  } catch (err) {
+    console.error('License lookup by session failed:', err);
+    res.status(500).json({ error: 'Internal error' });
   }
-  res.json({ key: license.key, email: license.email });
 });
 
 app.get('/health', (_req, res) => {
