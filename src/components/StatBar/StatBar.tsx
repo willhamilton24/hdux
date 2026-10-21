@@ -19,7 +19,7 @@ export function StatBar({
   const pct = Math.min(100, Math.max(0, (value / max) * 100));
 
   const [displayPct, setDisplayPct] = useState(animated ? 0 : pct);
-  const rafRef = useRef<number>();
+  const rafRef = useRef<number | undefined>(undefined);
   const startTimeRef = useRef<number | undefined>(undefined);
   const fromRef = useRef(0);
 

@@ -2,10 +2,11 @@ import { useTheme } from "../../theme/useTheme";
 import type { RadialMeterProps } from "./types";
 import "./RadialMeter.css";
 
-// Arc spans 240° with a 120° gap at the bottom.
-// Start: 150° clockwise from 12 o'clock (= 60° clockwise from 3 o'clock in SVG).
+// Arc spans 240° with a 120° gap centered at the bottom (gap spans 120°–240°
+// clockwise from 12 o'clock). Start: 240° clockwise from 12 o'clock
+// (= 150° clockwise from 3 o'clock in SVG).
 const ARC_DEG = 240;
-const START_FROM_3_OCL_DEG = 60; // degrees clockwise from the SVG default (3 o'clock)
+const START_FROM_3_OCL_DEG = 150; // degrees clockwise from the SVG default (3 o'clock)
 
 export function RadialMeter({
   value,
@@ -23,7 +24,8 @@ export function RadialMeter({
   const { theme } = useTheme();
   const resolvedColor = color ?? theme.mainColor;
 
-  const pct = Math.min(1, Math.max(0, (value - min) / (max - min)));
+  const range = max - min;
+  const pct = range > 0 ? Math.min(1, Math.max(0, (value - min) / range)) : 0;
 
   const radius = size / 2 - strokeWidth - 2;
   const cx = size / 2;
