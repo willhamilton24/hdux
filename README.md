@@ -160,6 +160,70 @@ A three-position theme mode switcher rendered as a pseudo-triangle with gap-cut 
 
 Corner mapping: top = custom, bottom-left = light, bottom-right = dark.
 
+### Input
+
+A text field with HDUX corner decorations. Fully controlled; supports labels, focus highlight, and disabled/read-only states.
+
+```tsx
+<Input
+  label="Operator ID"
+  placeholder="ENTER CALLSIGN"
+  value={val}
+  onChange={(e) => setVal(e.target.value)}
+  color="#00d4ff"   // optional accent override
+/>
+```
+
+### Table
+
+A themed data table. Pass typed column definitions and row data; each column can include a custom `render` function.
+
+```tsx
+<Table
+  columns={[
+    { key: "id", header: "ID", width: 80 },
+    { key: "name", header: "Agent" },
+    {
+      key: "status",
+      header: "Status",
+      render: (val) => <span style={{ color: statusColor(val) }}>{val}</span>,
+    },
+  ]}
+  rows={agents}
+  onRowClick={(row) => console.log(row)}
+  striped
+/>
+```
+
+### Modal
+
+An animated overlay dialog using a React portal. Accepts `title`, close-on-backdrop, Escape-key dismiss, and body-scroll lock.
+
+```tsx
+<Modal open={open} onClose={() => setOpen(false)} title="Confirm Action">
+  <Text variant="body">Reconfigure the relay?</Text>
+  <Button onClick={() => setOpen(false)}>CONFIRM</Button>
+</Modal>
+```
+
+### StatBar
+
+A HUD-style horizontal progress bar with label, optional value readout, tick marks, and an animated fill that eases to its target value.
+
+```tsx
+<StatBar label="Hull Integrity" value={72} showValue="percent" />
+<StatBar label="Ammo" value={14} max={50} color="#ff6f00" showValue />
+```
+
+### RadialMeter
+
+A circular gauge (SVG arc, 240° sweep) for single metrics. The fill transitions smoothly when `value` changes.
+
+```tsx
+<RadialMeter value={72} label="POWER" size={120} />
+<RadialMeter value={temp} max={200} label="CORE TEMP" formatValue={(v) => `${v}°`} />
+```
+
 ## Default Font
 
 HDUX uses [Quantico](https://fonts.google.com/specimen/Quantico) as the default framework font. The `HduxThemeProvider` automatically loads it from Google Fonts. Override via the `typography.mainFont` theme config.
@@ -182,7 +246,7 @@ Open-core npm library: free base components drive adoption, paid "pro" pack (dat
 
 ### Release TODOs
 - [x] Publish v0.1 to npm and deploy the Storybook (GitHub Action already exists) as a public docs/demo site
-- [ ] Expand the component set beyond Box/Text/Bars — inputs, tables, modals, and HUD-style charts are what paying users need
+- [x] Expand the component set beyond Box/Text/Bars — inputs, tables, modals, and HUD-style charts are what paying users need
 - [ ] Build 2-3 polished full-page demo templates (ops dashboard, game lobby, landing page) as the visual sales pitch
 - [ ] Create a paid Pro tier (advanced widgets + templates) gated by license key via Lemon Squeezy or Gumroad
 - [ ] Add GitHub Sponsors/Polar funding links as a secondary revenue channel

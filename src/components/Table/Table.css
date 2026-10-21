@@ -1,0 +1,72 @@
+/* ── Wrapper ─────────────────────────────────────────── */
+
+.hdux-table-wrapper {
+  overflow-x: auto;
+  font-family: var(--hdux-font-main, inherit);
+  border-top: 2px solid var(--hdux-table-color);
+  border-bottom: 2px solid var(--hdux-table-color);
+}
+
+/* ── Table ───────────────────────────────────────────── */
+
+.hdux-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+}
+
+/* ── Header ──────────────────────────────────────────── */
+
+.hdux-table-th {
+  padding: 10px 16px;
+  text-align: left;
+  color: var(--hdux-table-color);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-weight: 600;
+  border-bottom: 1px solid var(--hdux-table-color);
+  white-space: nowrap;
+  font-family: var(--hdux-font-main, inherit);
+}
+
+/* ── Cells ───────────────────────────────────────────── */
+
+.hdux-table-td {
+  padding: 9px 16px;
+  color: var(--hdux-text-color, #e0e0e0);
+  border-bottom: 1px solid
+    color-mix(in srgb, var(--hdux-table-color) 18%, transparent);
+  vertical-align: middle;
+  font-family: var(--hdux-font-main, inherit);
+}
+
+/* ── Zebra stripe ────────────────────────────────────── */
+
+.hdux-table-tr--alt .hdux-table-td {
+  background: color-mix(in srgb, var(--hdux-table-color) 5%, transparent);
+}
+
+/* ── Clickable rows ──────────────────────────────────── */
+
+.hdux-table-tr--clickable {
+  cursor: pointer;
+  transition: background 120ms ease-out;
+}
+
+.hdux-table-tr--clickable:hover .hdux-table-td {
+  background: color-mix(in srgb, var(--hdux-table-color) 12%, transparent);
+}
+
+/* ── Empty state ─────────────────────────────────────── */
+
+.hdux-table-empty {
+  padding: 28px 16px;
+  text-align: center;
+  color: var(--hdux-table-color);
+  opacity: 0.35;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  font-family: var(--hdux-font-main, inherit);
+}

@@ -1,0 +1,66 @@
+/* ── Wrapper ─────────────────────────────────────────── */
+
+.hdux-statbar {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-family: var(--hdux-font-main, inherit);
+}
+
+/* ── Meta row (label + value) ────────────────────────── */
+
+.hdux-statbar-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.hdux-statbar-label {
+  color: var(--hdux-statbar-color);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.hdux-statbar-value {
+  color: var(--hdux-statbar-color);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  opacity: 0.8;
+}
+
+/* ── Track ───────────────────────────────────────────── */
+
+.hdux-statbar-track {
+  position: relative;
+  height: var(--hdux-statbar-height, 8px);
+  background: color-mix(in srgb, var(--hdux-statbar-color) 14%, transparent);
+  overflow: visible;
+}
+
+/* ── Fill ────────────────────────────────────────────── */
+
+.hdux-statbar-fill {
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  background: var(--hdux-statbar-color);
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* ── Tick marks at 25 / 50 / 75 % ───────────────────── */
+
+.hdux-statbar-tick {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  width: 1px;
+  background: var(--hdux-background, #0a0a1a);
+  opacity: 0.7;
+  z-index: 1;
+}
+
+.hdux-statbar-tick--25 { left: 25%; }
+.hdux-statbar-tick--50 { left: 50%; }
+.hdux-statbar-tick--75 { left: 75%; }

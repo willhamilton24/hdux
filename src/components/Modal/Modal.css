@@ -1,0 +1,143 @@
+/* ── Backdrop ─────────────────────────────────────────── */
+
+.hdux-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: hdux-modal-backdrop-in 180ms ease-out;
+}
+
+@keyframes hdux-modal-backdrop-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── Dialog ──────────────────────────────────────────── */
+
+.hdux-modal {
+  position: relative;
+  background: var(--hdux-background, #0a0a1a);
+  padding: calc(var(--hdux-modal-corner-len, 14px) + 12px)
+           calc(var(--hdux-modal-corner-len, 14px) + 16px);
+  font-family: var(--hdux-font-main, inherit);
+  outline: none;
+  animation: hdux-modal-in 240ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes hdux-modal-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* ── Corner pieces ───────────────────────────────────── */
+
+.hdux-modal-corner {
+  position: absolute;
+  pointer-events: none;
+}
+
+.hdux-modal-corner-h,
+.hdux-modal-corner-v {
+  position: absolute;
+  background: var(--hdux-modal-color);
+}
+
+.hdux-modal-corner--tl { top: 0; left: 0; }
+.hdux-modal-corner--tl .hdux-modal-corner-h {
+  top: 0; left: 0;
+  width: var(--hdux-modal-corner-len); height: var(--hdux-modal-corner-wid);
+}
+.hdux-modal-corner--tl .hdux-modal-corner-v {
+  top: 0; left: 0;
+  width: var(--hdux-modal-corner-wid); height: var(--hdux-modal-corner-len);
+}
+
+.hdux-modal-corner--tr { top: 0; right: 0; }
+.hdux-modal-corner--tr .hdux-modal-corner-h {
+  top: 0; right: 0;
+  width: var(--hdux-modal-corner-len); height: var(--hdux-modal-corner-wid);
+}
+.hdux-modal-corner--tr .hdux-modal-corner-v {
+  top: 0; right: 0;
+  width: var(--hdux-modal-corner-wid); height: var(--hdux-modal-corner-len);
+}
+
+.hdux-modal-corner--bl { bottom: 0; left: 0; }
+.hdux-modal-corner--bl .hdux-modal-corner-h {
+  bottom: 0; left: 0;
+  width: var(--hdux-modal-corner-len); height: var(--hdux-modal-corner-wid);
+}
+.hdux-modal-corner--bl .hdux-modal-corner-v {
+  bottom: 0; left: 0;
+  width: var(--hdux-modal-corner-wid); height: var(--hdux-modal-corner-len);
+}
+
+.hdux-modal-corner--br { bottom: 0; right: 0; }
+.hdux-modal-corner--br .hdux-modal-corner-h {
+  bottom: 0; right: 0;
+  width: var(--hdux-modal-corner-len); height: var(--hdux-modal-corner-wid);
+}
+.hdux-modal-corner--br .hdux-modal-corner-v {
+  bottom: 0; right: 0;
+  width: var(--hdux-modal-corner-wid); height: var(--hdux-modal-corner-len);
+}
+
+/* ── Header ──────────────────────────────────────────── */
+
+.hdux-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid
+    color-mix(in srgb, var(--hdux-modal-color) 35%, transparent);
+}
+
+.hdux-modal-title {
+  color: var(--hdux-modal-color);
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.hdux-modal-close {
+  background: transparent;
+  border: none;
+  color: var(--hdux-modal-color);
+  cursor: pointer;
+  font-size: 13px;
+  padding: 0 2px;
+  line-height: 1;
+  opacity: 0.55;
+  transition: opacity 120ms ease-out;
+  font-family: inherit;
+}
+
+.hdux-modal-close:hover {
+  opacity: 1;
+}
+
+.hdux-modal-close:focus-visible {
+  outline: 1px solid var(--hdux-modal-color);
+  outline-offset: 3px;
+}
+
+/* ── Body ────────────────────────────────────────────── */
+
+.hdux-modal-body {
+  color: var(--hdux-text-color, #e0e0e0);
+  font-size: 14px;
+  line-height: 1.6;
+}
