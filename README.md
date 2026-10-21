@@ -6,7 +6,7 @@ A React component framework for building dynamic, animated user interfaces with 
 
 ## Migrating from HDUI-Prototype
 
-**HDUI-Prototype is archived.** All active development continues here as **HDUX**. If you're using the old package, please migrate:
+**HDUI-Prototype is being archived.** All active development continues here as **HDUX**. If you're using the old package, please migrate:
 
 1. Uninstall the old package: `npm uninstall @hamiltondynamic/hdui-prototype`
 2. Install HDUX: `npm install @hamiltondynamic/hdux`
@@ -308,4 +308,4 @@ Open-core npm library: free base components drive adoption, paid "pro" pack (dat
 - [x] Create a paid Pro tier (advanced widgets + templates) gated by license key via Lemon Squeezy or Gumroad
 - [ ] Add GitHub Sponsors/Polar funding links as a secondary revenue channel
 - [ ] Launch posts with animation GIFs on r/reactjs, Hacker News, and X; submit to component-library directories
-- [x] Archive HDUI-Prototype with a pointer here so traffic consolidates on one repo
+- [ ] Archive HDUI-Prototype with a pointer here so traffic consolidates on one repo (migration docs drafted; archiving the public repo and pointing its traffic here waits on the deployment switch)
