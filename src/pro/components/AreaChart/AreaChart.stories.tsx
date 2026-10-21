@@ -10,27 +10,34 @@ const meta: Meta<typeof AreaChart> = {
   title: "HDUX Pro/AreaChart",
   component: AreaChart,
   decorators: [
-    (Story) => (
-      <HduxThemeProvider
-        config={{
-          defaultMode: "dark",
-          master: {
-            mainColor: "#00d4ff",
-            textColor: "#e0e0e0",
-            background: "#0a0a1a",
-            typography: { mainFont: '"Quantico", system-ui, sans-serif' },
-            borderWidth: "2px",
-            boxCorners: { length: "12px" },
-          },
-        }}
-      >
-        <HduxProProvider licenseKey={PRO_KEY}>
-          <div style={{ padding: 40, background: "#0a0a1a" }}>
-            <Story />
-          </div>
-        </HduxProProvider>
-      </HduxThemeProvider>
-    ),
+    (Story, context) => {
+      const content = (
+        <div style={{ padding: 40, background: "#0a0a1a" }}>
+          <Story />
+        </div>
+      );
+      return (
+        <HduxThemeProvider
+          config={{
+            defaultMode: "dark",
+            master: {
+              mainColor: "#00d4ff",
+              textColor: "#e0e0e0",
+              background: "#0a0a1a",
+              typography: { mainFont: '"Quantico", system-ui, sans-serif' },
+              borderWidth: "2px",
+              boxCorners: { length: "12px" },
+            },
+          }}
+        >
+          {context.parameters?.proLicense === false ? (
+            content
+          ) : (
+            <HduxProProvider licenseKey={PRO_KEY}>{content}</HduxProProvider>
+          )}
+        </HduxThemeProvider>
+      );
+    },
   ],
 };
 export default meta;
@@ -102,28 +109,7 @@ export const Animated: Story = {
 
 export const NoLicense: Story = {
   name: "No License (gate shown)",
-  decorators: [
-    (Story) => (
-      <HduxThemeProvider
-        config={{
-          defaultMode: "dark",
-          master: {
-            mainColor: "#00d4ff",
-            textColor: "#e0e0e0",
-            background: "#0a0a1a",
-            typography: { mainFont: '"Quantico", system-ui, sans-serif' },
-            borderWidth: "2px",
-            boxCorners: { length: "12px" },
-          },
-        }}
-      >
-        {/* No HduxProProvider — should show gate */}
-        <div style={{ padding: 40, background: "#0a0a1a" }}>
-          <Story />
-        </div>
-      </HduxThemeProvider>
-    ),
-  ],
+  parameters: { proLicense: false },
   args: {
     data: [12, 28, 45, 38, 60, 52, 71],
     title: "THROUGHPUT",
