@@ -35,7 +35,7 @@ export async function validateLicense(
 
     return { valid: true };
   } catch {
-    // Network unreachable — accept any well-formed key (offline fallback)
-    return { valid: true };
+    // License service unreachable — fail closed; no offline grant without a signed key
+    return { valid: false, reason: "License service unreachable" };
   }
 }
