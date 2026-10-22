@@ -287,8 +287,9 @@ function App() {
 
 | Template | Description |
 |----------|-------------|
-| `OpsDashboard` | Full-page operational dashboard (gauges + charts + event log) |
-| `GameLobby` | Game lobby interface with team view, ready state, and countdown |
+| `OpsDashboard` | Full-page operational dashboard (gauges + charts + service map + event log) |
+| `GameLobby` | Game lobby with team view, MMR display, ping, ready state, and countdown |
+| `LandingPage` | Hero marketing page — animated showcase with live component demos and Pro CTA |
 
 ### Purchasing a License
 
@@ -313,7 +314,7 @@ Open-core npm library: free base components drive adoption, paid "pro" pack (dat
 - [x] Close the free-Pro hole: `src/pro/validateLicense.ts` accepts any well-formed key when the service is unreachable — fail closed (or use signed offline keys) once the license service exists
 - [x] Add a "Buy HDUX Pro" checkout path (Stripe Checkout session against the provisioned price) linked from README and the Pro gate overlay, delivering the license key by email
 - [ ] Run a Stripe test-mode E2E check: checkout → webhook → key issued → `validateLicense` accepts the key and rejects a revoked one
-- [ ] Build 2-3 polished full-page demo templates (ops dashboard, game lobby, landing page) as the visual sales pitch
+- [x] Build 2-3 polished full-page demo templates (ops dashboard, game lobby, landing page) as the visual sales pitch
 - [ ] Add GitHub Sponsors/Polar funding links as a secondary revenue channel
 - [ ] Launch posts with animation GIFs on r/reactjs, Hacker News, and X; submit to component-library directories (waits on the deployment switch)
 - [ ] Archive HDUI-Prototype with a pointer here so traffic consolidates on one repo (migration docs drafted; archiving the public repo and pointing its traffic here waits on the deployment switch)

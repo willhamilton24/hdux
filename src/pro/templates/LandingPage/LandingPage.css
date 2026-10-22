@@ -1,0 +1,332 @@
+.hdux-landing {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--hdux-bg, #06080f);
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Subtle dot-grid background */
+.hdux-landing__grid-bg {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    radial-gradient(
+      circle,
+      color-mix(in srgb, var(--hdux-color-main, #00d4ff) 12%, transparent) 1px,
+      transparent 1px
+    );
+  background-size: 32px 32px;
+  opacity: 0.35;
+}
+
+.hdux-landing__body {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 64px 24px 56px;
+  max-width: 1100px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ── Brand ─────────────────────────────────────────────── */
+.hdux-landing__brand {
+  font-family: var(--hdux-font-main, monospace);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  color: var(--hdux-color-main, #00d4ff);
+}
+
+/* ── Hero ──────────────────────────────────────────────── */
+.hdux-landing__hero {
+  width: 100%;
+}
+
+.hdux-landing__hero-box {
+  width: 100%;
+}
+
+.hdux-landing__hero-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 8px 0;
+}
+
+.hdux-landing__hero-badge {
+  font-family: var(--hdux-font-main, monospace);
+  font-size: 0.65rem;
+  letter-spacing: 0.22em;
+  color: var(--hdux-color-main, #00d4ff);
+  opacity: 0.6;
+}
+
+.hdux-landing__headline {
+  font-size: clamp(1.4rem, 4vw, 2.4rem) !important;
+  line-height: 1.1 !important;
+  letter-spacing: 0.12em !important;
+}
+
+.hdux-landing__tagline {
+  max-width: 560px;
+  opacity: 0.75;
+  line-height: 1.5;
+}
+
+/* Live demo strip */
+.hdux-landing__hero-demo {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin: 8px 0;
+  padding: 12px 0;
+  border-top: 1px solid color-mix(in srgb, var(--hdux-color-main, #00d4ff) 15%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--hdux-color-main, #00d4ff) 15%, transparent);
+}
+
+.hdux-landing__demo-chart {
+  flex: 0 0 auto;
+}
+
+.hdux-landing__demo-gauges {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+/* Hero CTA */
+.hdux-landing__hero-cta {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.hdux-landing__hero-sub {
+  font-family: var(--hdux-font-main, monospace);
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  color: var(--hdux-color-main, #00d4ff);
+  opacity: 0.5;
+}
+
+/* ── Stats strip ────────────────────────────────────────── */
+.hdux-landing__stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 1px;
+  background: color-mix(in srgb, var(--hdux-color-main, #00d4ff) 20%, transparent);
+  border: 1px solid color-mix(in srgb, var(--hdux-color-main, #00d4ff) 20%, transparent);
+}
+
+.hdux-landing__stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 16px 12px;
+  background: var(--hdux-bg, #06080f);
+  text-align: center;
+}
+
+.hdux-landing__stat-value {
+  font-family: var(--hdux-font-main, monospace);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1;
+}
+
+.hdux-landing__stat-label {
+  font-family: var(--hdux-font-main, monospace);
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  color: var(--hdux-color-main, #00d4ff);
+  opacity: 0.5;
+}
+
+/* ── Feature grid ───────────────────────────────────────── */
+.hdux-landing__features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.hdux-landing__feature-box {
+  height: 100%;
+}
+
+.hdux-landing__feature {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: 100%;
+}
+
+.hdux-landing__feature-badge {
+  font-family: var(--hdux-font-main, monospace);
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  font-weight: 700;
+}
+
+.hdux-landing__feature-desc {
+  opacity: 0.6;
+  font-size: 0.72rem !important;
+  line-height: 1.6;
+  flex: 1;
+}
+
+/* Feature demo areas */
+.hdux-landing__feature-demo {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid color-mix(in srgb, var(--hdux-color-main, #00d4ff) 12%, transparent);
+}
+
+.hdux-landing__feature-demo--gauges {
+  flex-direction: row;
+  gap: 16px;
+  align-items: center;
+}
+
+/* Player row mini-demo */
+.hdux-landing__player-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--hdux-font-main, monospace);
+  font-size: 0.7rem;
+  padding: 3px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--hdux-color-main, #00d4ff) 8%, transparent);
+}
+
+.hdux-landing__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.hdux-landing__player-name {
+  flex: 1;
+  letter-spacing: 0.08em;
+  font-size: 0.68rem;
+}
+
+.hdux-landing__player-stat {
+  font-size: 0.6rem;
+  opacity: 0.45;
+  color: var(--hdux-color-main, #00d4ff);
+}
+
+/* ── Pro CTA block ──────────────────────────────────────── */
+.hdux-landing__cta-section {
+  width: 100%;
+}
+
+.hdux-landing__cta-box {
+  width: 100%;
+}
+
+.hdux-landing__cta-inner {
+  display: flex;
+  gap: 40px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.hdux-landing__cta-left {
+  flex: 1;
+  min-width: 240px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.hdux-landing__cta-desc {
+  opacity: 0.65;
+  font-size: 0.72rem !important;
+  line-height: 1.6;
+  max-width: 440px;
+}
+
+.hdux-landing__cta-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hdux-landing__cta-item {
+  font-family: var(--hdux-font-main, monospace);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  color: var(--hdux-color-main, #00d4ff);
+  opacity: 0.75;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hdux-landing__cta-tick {
+  font-size: 0.6rem;
+  opacity: 0.8;
+}
+
+.hdux-landing__cta-right {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.hdux-landing__price-badge {
+  border: 1px solid;
+  padding: 20px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.hdux-landing__price-label {
+  font-family: var(--hdux-font-main, monospace);
+  font-size: 0.6rem;
+  letter-spacing: 0.28em;
+  opacity: 0.5;
+  color: var(--hdux-color-main, #00d4ff);
+}
+
+.hdux-landing__price-value {
+  font-family: var(--hdux-font-main, monospace);
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+}
+
+.hdux-landing__price-note {
+  font-family: var(--hdux-font-main, monospace);
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
+  opacity: 0.4;
+  color: var(--hdux-color-main, #00d4ff);
+}

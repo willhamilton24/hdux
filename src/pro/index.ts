@@ -41,3 +41,10 @@ export type {
   LobbyPlayer,
   LobbyMatchInfo,
 } from "./templates/GameLobby";
+
+export { LandingPage } from "./templates/LandingPage";
+export type {
+  LandingPageProps,
+  LandingFeature,
+  LandingStats,
+} from "./templates/LandingPage";

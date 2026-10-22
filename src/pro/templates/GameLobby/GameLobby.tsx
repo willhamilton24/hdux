@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { HduxThemeProvider } from "../../../theme/ThemeProvider";
-import { TopBar, BottomBar, BarLeft, BarRight, BarElement } from "../../../components/Bar";
+import { TopBar, BottomBar, BarLeft, BarCenter, BarRight, BarElement } from "../../../components/Bar";
 import { Box } from "../../../components/Box";
 import { Text } from "../../../components/Text";
 import { Button } from "../../../components/Button";
@@ -10,23 +10,23 @@ import type { GameLobbyProps, LobbyPlayer } from "./types";
 import "./GameLobby.css";
 
 const STATUS_COLORS: Record<LobbyPlayer["status"], string> = {
-  ready: "#00e676",
+  ready:     "#00e676",
   "not-ready": "#ff1744",
-  loading: "#ff6f00",
+  loading:   "#ff6f00",
 };
 const STATUS_LABELS: Record<LobbyPlayer["status"], string> = {
-  ready: "READY",
+  ready:     "READY",
   "not-ready": "WAITING",
-  loading: "LOADING…",
+  loading:   "LOADING…",
 };
 
 const DEFAULT_PLAYERS: LobbyPlayer[] = [
-  { id: 1, name: "ACE_PILOT", status: "ready", team: "A", stat: "2841 MMR", isLocalPlayer: true },
-  { id: 2, name: "GHOST_0x7F", status: "ready", team: "A", stat: "2790 MMR" },
-  { id: 3, name: "UNIT_NULL", status: "not-ready", team: "A", stat: "2650 MMR" },
-  { id: 4, name: "SHADOW_KIT", status: "ready", team: "B", stat: "2900 MMR" },
-  { id: 5, name: "NEON_STRIKE", status: "loading", team: "B", stat: "2755 MMR" },
-  { id: 6, name: "VOID_ECHO", status: "ready", team: "B", stat: "2810 MMR" },
+  { id: 1, name: "ACE_PILOT",   status: "ready",     team: "A", stat: "2841 MMR", isLocalPlayer: true },
+  { id: 2, name: "GHOST_0x7F",  status: "ready",     team: "A", stat: "2790 MMR" },
+  { id: 3, name: "UNIT_NULL",   status: "not-ready", team: "A", stat: "2650 MMR" },
+  { id: 4, name: "SHADOW_KIT",  status: "ready",     team: "B", stat: "2900 MMR" },
+  { id: 5, name: "NEON_STRIKE", status: "loading",   team: "B", stat: "2755 MMR" },
+  { id: 6, name: "VOID_ECHO",   status: "ready",     team: "B", stat: "2810 MMR" },
 ];
 
 const DEFAULT_MATCH = {
@@ -36,8 +36,20 @@ const DEFAULT_MATCH = {
   countdown: 0,
 };
 
+// Simulated ping values per player (ms)
+const PING_MAP: Record<number | string, number> = {
+  1: 24, 2: 31, 3: 112, 4: 18, 5: 88, 6: 42,
+};
+
+function pingColor(ms: number) {
+  if (ms < 50) return "#00e676";
+  if (ms < 100) return "#ff6f00";
+  return "#ff1744";
+}
+
 function PlayerRow({ player }: { player: LobbyPlayer }) {
   const color = STATUS_COLORS[player.status];
+  const ping = PING_MAP[player.id];
   return (
     <div
       className={[
@@ -48,16 +60,44 @@ function PlayerRow({ player }: { player: LobbyPlayer }) {
         .join(" ")}
     >
       <span className="hdux-game-lobby__player-status-dot" style={{ background: color }} />
-      <span className="hdux-game-lobby__player-name" style={player.isLocalPlayer ? { color: "#fff" } : undefined}>
+      <span
+        className="hdux-game-lobby__player-name"
+        style={player.isLocalPlayer ? { color: "#fff" } : undefined}
+      >
         {player.name}
         {player.isLocalPlayer && <span className="hdux-game-lobby__you"> [YOU]</span>}
       </span>
       {player.stat && (
         <span className="hdux-game-lobby__player-stat">{player.stat}</span>
       )}
+      {ping !== undefined && (
+        <span className="hdux-game-lobby__player-ping" style={{ color: pingColor(ping) }}>
+          {ping}ms
+        </span>
+      )}
       <span className="hdux-game-lobby__player-status-label" style={{ color }}>
         {STATUS_LABELS[player.status]}
       </span>
+    </div>
+  );
+}
+
+function TeamSection({ label, players }: { label: string; players: LobbyPlayer[] }) {
+  const avgMmr = Math.round(
+    players.reduce((sum, p) => {
+      const n = parseInt((p.stat ?? "0").replace(/[^\d]/g, ""), 10);
+      return sum + (isNaN(n) ? 0 : n);
+    }, 0) / (players.length || 1)
+  );
+  return (
+    <div className="hdux-game-lobby__team">
+      <div className="hdux-game-lobby__team-header">
+        <Text variant="subheading">{label}</Text>
+        {avgMmr > 0 && (
+          <span className="hdux-game-lobby__team-avg">AVG {avgMmr} MMR</span>
+        )}
+      </div>
+      {players.map((p) => <PlayerRow key={p.id} player={p} />)}
     </div>
   );
 }
@@ -80,21 +120,30 @@ function GameLobbyInner({
   }, []);
 
   useEffect(() => {
+    setCountdown(matchInfo.countdown ?? 0);
+  }, [matchInfo.countdown]);
+
+  useEffect(() => {
     if (!countdown) return;
     const id = setInterval(() => setCountdown((c) => Math.max(0, c - 1)), 1000);
     return () => clearInterval(id);
   }, [countdown]);
 
-  const readyCount = players.filter((p) => p.status === "ready").length;
-  const teamA = players.filter((p) => p.team === "A");
-  const teamB = players.filter((p) => p.team === "B");
-  const hasTeams = teamA.length > 0 && teamB.length > 0;
+  const readyCount  = players.filter((p) => p.status === "ready").length;
+  const teamA       = players.filter((p) => p.team === "A");
+  const teamB       = players.filter((p) => p.team === "B");
+  const hasTeams    = teamA.length > 0 && teamB.length > 0;
+  const allReady    = readyCount === players.length;
 
   function handleReadyToggle() {
     const next = !ready;
     setReady(next);
     onReady?.(next);
   }
+
+  const countdownStr = countdown > 0
+    ? `${String(Math.floor(countdown / 60)).padStart(2, "0")}:${String(countdown % 60).padStart(2, "0")}`
+    : null;
 
   return (
     <HduxThemeProvider
@@ -121,6 +170,15 @@ function GameLobbyInner({
               <Text variant="body">{matchInfo.mode ?? "LOBBY"}</Text>
             </BarElement>
           </BarLeft>
+          <BarCenter>
+            {countdownStr && (
+              <BarElement borderless>
+                <span className="hdux-game-lobby__topbar-countdown" style={{ color }}>
+                  {countdownStr}
+                </span>
+              </BarElement>
+            )}
+          </BarCenter>
           <BarRight>
             <BarElement>
               <Text variant="body">{matchInfo.map ?? ""}</Text>
@@ -129,18 +187,29 @@ function GameLobbyInner({
         </TopBar>
 
         <div className="hdux-game-lobby__body">
-          {/* Match info */}
+          {/* Match info banner */}
           <Box animation="horizontalFirst" hasLoaded={loaded} fullBorder>
             <div className="hdux-game-lobby__match-info">
-              <Text variant="h3" animation="print">{matchInfo.title ?? "MATCH LOBBY"}</Text>
+              <div className="hdux-game-lobby__match-title-row">
+                <Text variant="h3" animation="print">{matchInfo.title ?? "MATCH LOBBY"}</Text>
+                {allReady && (
+                  <span className="hdux-game-lobby__all-ready-badge" style={{ color: "#00e676" }}>
+                    ALL READY
+                  </span>
+                )}
+              </div>
               <div className="hdux-game-lobby__match-details">
-                <Text variant="body">{matchInfo.mode}</Text>
-                <Text variant="body">{matchInfo.map}</Text>
+                <span className="hdux-game-lobby__match-chip" style={{ borderColor: color }}>
+                  {matchInfo.mode}
+                </span>
+                <span className="hdux-game-lobby__match-chip" style={{ borderColor: color }}>
+                  ◈ {matchInfo.map}
+                </span>
               </div>
               {countdown > 0 && (
                 <div className="hdux-game-lobby__countdown" style={{ color }}>
-                  {String(Math.floor(countdown / 60)).padStart(2, "0")}:
-                  {String(countdown % 60).padStart(2, "0")}
+                  {countdownStr}
+                  <span className="hdux-game-lobby__countdown-label">UNTIL MATCH</span>
                 </div>
               )}
             </div>
@@ -151,15 +220,9 @@ function GameLobbyInner({
             <div className="hdux-game-lobby__player-list">
               {hasTeams ? (
                 <>
-                  <div className="hdux-game-lobby__team">
-                    <Text variant="subheading">TEAM ALPHA</Text>
-                    {teamA.map((p) => <PlayerRow key={p.id} player={p} />)}
-                  </div>
+                  <TeamSection label="TEAM ALPHA" players={teamA} />
                   <div className="hdux-game-lobby__team-divider" style={{ borderColor: color }} />
-                  <div className="hdux-game-lobby__team">
-                    <Text variant="subheading">TEAM BRAVO</Text>
-                    {teamB.map((p) => <PlayerRow key={p.id} player={p} />)}
-                  </div>
+                  <TeamSection label="TEAM BRAVO" players={teamB} />
                 </>
               ) : (
                 players.map((p) => <PlayerRow key={p.id} player={p} />)
@@ -167,23 +230,28 @@ function GameLobbyInner({
             </div>
           </Box>
 
-          {/* Ready progress + button */}
+          {/* Ready panel */}
           <Box animation="verticalFirst" hasLoaded={loaded} fullBorder>
             <div className="hdux-game-lobby__ready-panel">
               <StatBar
                 label="PLAYERS READY"
                 value={readyCount}
                 max={players.length}
-                color={readyCount === players.length ? "#00e676" : color}
+                color={allReady ? "#00e676" : color}
                 showValue
                 height={8}
               />
-              <Button
-                onClick={handleReadyToggle}
-                color={ready ? "#00e676" : undefined}
-              >
-                {ready ? "READY ✓" : "MARK READY"}
-              </Button>
+              <div className="hdux-game-lobby__ready-row">
+                <Button
+                  onClick={handleReadyToggle}
+                  color={ready ? "#00e676" : undefined}
+                >
+                  {ready ? "READY ✓" : "MARK READY"}
+                </Button>
+                <span className="hdux-game-lobby__ready-count" style={{ color: allReady ? "#00e676" : color }}>
+                  {readyCount}/{players.length} READY
+                </span>
+              </div>
             </div>
           </Box>
         </div>
@@ -196,7 +264,12 @@ function GameLobbyInner({
           </BarLeft>
           <BarRight>
             <BarElement>
-              <Text variant="body">{readyCount}/{players.length} READY</Text>
+              <span
+                className="hdux-game-lobby__status"
+                style={{ color: allReady ? "#00e676" : color }}
+              >
+                {allReady ? "● MATCH READY" : `● WAITING ${players.length - readyCount}`}
+              </span>
             </BarElement>
           </BarRight>
         </BottomBar>
