@@ -4,6 +4,8 @@ import { migrate, createLicense, findLicenseByKey, findLicenseBySession } from '
 import { generateKey } from './keys';
 import { sendLicenseEmail } from './email';
 
+export { migrate } from './db';
+
 const PORT = Number(process.env.PORT ?? 10000);
 const STRIPE_PRICE_ID = process.env.STRIPE_PRICE_ID ?? 'price_1UStJ7GRjKD6n9dmqdwh3trU';
 const BASE_URL = process.env.SERVICE_URL ?? 'https://api.hdux.dev';
@@ -204,13 +206,17 @@ app.get('/health', (_req, res) => {
   res.json({ ok: true });
 });
 
-migrate()
-  .then(() => {
-    app.listen(PORT, () => {
-      console.log(`License service listening on port ${PORT}`);
+export { app };
+
+if (require.main === module) {
+  migrate()
+    .then(() => {
+      app.listen(PORT, () => {
+        console.log(`License service listening on port ${PORT}`);
+      });
+    })
+    .catch((err) => {
+      console.error('Failed to run migrations:', err);
+      process.exit(1);
     });
-  })
-  .catch((err) => {
-    console.error('Failed to run migrations:', err);
-    process.exit(1);
-  });
+}

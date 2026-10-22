@@ -312,7 +312,7 @@ Open-core npm library: free base components drive adoption, paid "pro" pack (dat
 - [x] Stand up the license service (`api.hdux.dev/v1/license/validate` has no backend): a small web service + `render.yaml` that issues keys from the Stripe checkout webhook and validates them on request
 - [x] Close the free-Pro hole: `src/pro/validateLicense.ts` accepts any well-formed key when the service is unreachable — fail closed (or use signed offline keys) once the license service exists
 - [x] Add a "Buy HDUX Pro" checkout path (Stripe Checkout session against the provisioned price) linked from README and the Pro gate overlay, delivering the license key by email
-- [ ] Run a Stripe test-mode E2E check: checkout → webhook → key issued → `validateLicense` accepts the key and rejects a revoked one
+- [x] Run a Stripe test-mode E2E check: checkout → webhook → key issued → `validateLicense` accepts the key and rejects a revoked one
 - [ ] Build 2-3 polished full-page demo templates (ops dashboard, game lobby, landing page) as the visual sales pitch
 - [ ] Add GitHub Sponsors/Polar funding links as a secondary revenue channel
 - [ ] Launch posts with animation GIFs on r/reactjs, Hacker News, and X; submit to component-library directories (waits on the deployment switch)
