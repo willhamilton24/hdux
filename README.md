@@ -312,8 +312,40 @@ Open-core npm library: free base components drive adoption, paid "pro" pack (dat
 - [x] Stand up the license service (`api.hdux.dev/v1/license/validate` has no backend): a small web service + `render.yaml` that issues keys from the Stripe checkout webhook and validates them on request
 - [x] Close the free-Pro hole: `src/pro/validateLicense.ts` accepts any well-formed key when the service is unreachable — fail closed (or use signed offline keys) once the license service exists
 - [x] Add a "Buy HDUX Pro" checkout path (Stripe Checkout session against the provisioned price) linked from README and the Pro gate overlay, delivering the license key by email
-- [x] Run a Stripe test-mode E2E check: checkout → webhook → key issued → `validateLicense` accepts the key and rejects a revoked one
+- [ ] Run a Stripe test-mode E2E check: checkout → webhook → key issued → `validateLicense` accepts the key and rejects a revoked one
 - [ ] Build 2-3 polished full-page demo templates (ops dashboard, game lobby, landing page) as the visual sales pitch
 - [ ] Add GitHub Sponsors/Polar funding links as a secondary revenue channel
 - [ ] Launch posts with animation GIFs on r/reactjs, Hacker News, and X; submit to component-library directories (waits on the deployment switch)
 - [ ] Archive HDUI-Prototype with a pointer here so traffic consolidates on one repo (migration docs drafted; archiving the public repo and pointing its traffic here waits on the deployment switch)
+
+### Private license E2E verification
+
+The previous test created an unpaid session and signed a fabricated completion event.
+That was synthetic webhook integration coverage, not evidence of completed checkout.
+The completion item above remains unchecked until a reproducible completed run exists.
+
+Run `npm run test:e2e` in `license-service` with `STRIPE_SECRET_KEY` (only `sk_test_`),
+`STRIPE_PRICE_ID`, and an explicitly selected `TEST_DATABASE_URL` supplied privately.
+The database role must be able to create/drop schemas. The harness creates a unique
+schema with no public search-path fallback for both the service and test pools, then
+drops it (including all test rows) on exit. It never uses `DATABASE_URL` as a fallback.
+Missing configuration fails with `BLOCKED`, rather than passing a skipped test.
+
+The harness calls the application's POST checkout route with loopback redirects and
+writes the hosted test Checkout URL to a temporary private file. An operator must
+complete that test checkout within 180 seconds; no agent enters payment details.
+It polls Stripe for the paid, completed session and the matching actual completion
+event, re-signs that unchanged event for local delivery, correlates the issued key,
+and calls the real validator before and after revocation. No public endpoint or
+webhook registration is used. This verifies local event handling, not public Stripe
+webhook transport. SMTP is disabled during the run. Temporary files, pools, server,
+schema and environment overrides are cleaned up even on partial setup failure;
+open Stripe test sessions are expired. Completed test payments/events remain in
+Stripe's test-mode history.
+
+No completed checkout evidence is recorded yet. A future sanitized run record should
+include the revision, command, UTC timestamp, test result, and the harness's final
+correlation summary, with no credentials, Checkout URLs, customer details, or license
+keys. Public deployment/delivery verification remains disabled by project policy.
+
+Review-fix checks (2026-10-22): root build/typecheck, license-service build, and\nstandalone strict typechecking of the E2E test passed. Missing-config and non-test\ncredential probes failed explicitly as intended. The normal E2E command was\nBLOCKED by missing local configuration; checkout, database isolation and key\nissuance have not been verified against the provisioned services in this run.\nA failed database-connection probe also exited promptly without a server-close hang.\nEOF

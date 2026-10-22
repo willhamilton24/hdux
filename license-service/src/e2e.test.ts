@@ -1,169 +1,175 @@
 /**
- * Stripe test-mode E2E: checkout → webhook → key issued → validateLicense accepts → revoke → rejects
- *
- * Requires env: STRIPE_SECRET_KEY (sk_test_…), DATABASE_URL
- * STRIPE_WEBHOOK_SECRET is overridden with a local test value so no live webhook registration
- * is needed — events are signed in-process with stripe.webhooks.generateTestHeaderString.
- *
- * validateLicense (src/pro/validateLicense.ts) is exercised via the same HTTP contract: it
- * POSTs { key } to /v1/license/validate and reads { valid } / { error }.  The helper below
- * reproduces that call so the license-service test stays self-contained.
+ * Private Stripe checkout E2E. An operator completes the test-mode Checkout URL
+ * written to a private temporary file. No public webhook is registered: the real
+ * Stripe event is retrieved and re-signed for loopback delivery. This checks event
+ * handling, not Stripe's public webhook delivery infrastructure.
  */
-
 import http from 'http';
+import { randomUUID } from 'crypto';
+import { mkdtemp, writeFile, rm } from 'fs/promises';
+import { tmpdir } from 'os';
+import { join } from 'path';
 import { Pool } from 'pg';
 import Stripe from 'stripe';
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { expect, it, vi } from 'vitest';
+import { validateLicense } from '../../src/pro/validateLicense';
 
-const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
-const DATABASE_URL = process.env.DATABASE_URL;
-const STRIPE_PRICE_ID =
-  process.env.STRIPE_PRICE_ID ?? 'price_1UStJ7GRjKD6n9dmqdwh3trU';
-
-// A local signing secret — no live webhook endpoint needed
-const TEST_WEBHOOK_SECRET = 'whsec_test_hdux_e2e_local_signing_key_0000000';
-
-// Mirror of validateLicense from src/pro/validateLicense.ts, called against the local server
-async function validateLicense(
-  key: string,
-  validationUrl: string,
-): Promise<{ valid: true } | { valid: false; reason: string }> {
-  const res = await fetch(validationUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ key }),
-    signal: AbortSignal.timeout(5000),
-  });
-  if (!res.ok) {
-    const json = await res.json().catch(() => ({}));
-    return {
-      valid: false,
-      reason: (json as { error?: string }).error ?? 'License invalid',
-    };
+it('completed test checkout → real event → issued key → real validator → revocation', async () => {
+  // Fail before importing the service, opening a database, or contacting Stripe.
+  const secret = process.env.STRIPE_SECRET_KEY;
+  const database = process.env.TEST_DATABASE_URL;
+  const price = process.env.STRIPE_PRICE_ID;
+  if (!secret || !database || !price) {
+    throw new Error('BLOCKED: STRIPE_SECRET_KEY, TEST_DATABASE_URL and STRIPE_PRICE_ID are required; E2E did not run.');
   }
-  return { valid: true };
-}
-
-describe.skipIf(!STRIPE_SECRET_KEY || !DATABASE_URL)(
-  'Stripe test-mode E2E',
-  () => {
-    let stripe: Stripe;
-    let pool: Pool;
-    let server: http.Server;
-    let serverUrl: string;
-    let validateUrl: string;
-
-    beforeAll(async () => {
-      // Override webhook secret before the module is loaded so it captures our test value
-      process.env.STRIPE_WEBHOOK_SECRET = TEST_WEBHOOK_SECRET;
-      process.env.STRIPE_PRICE_ID = STRIPE_PRICE_ID;
-
-      // Fresh module load so the webhook handler uses the test secret above
-      vi.resetModules();
-      const mod = await import('./index');
-      await mod.migrate();
-
-      server = http.createServer(mod.app);
-      await new Promise<void>((resolve) => server.listen(0, resolve));
-      const addr = server.address() as { port: number };
-      serverUrl = `http://localhost:${addr.port}`;
-      validateUrl = `${serverUrl}/v1/license/validate`;
-
-      stripe = new Stripe(STRIPE_SECRET_KEY!);
-      pool = new Pool({ connectionString: DATABASE_URL });
-    }, 20_000);
-
-    afterAll(async () => {
-      await pool?.end();
-      await new Promise<void>((resolve, reject) =>
-        server?.close((err) => (err ? reject(err) : resolve())),
-      );
+  if (!/^sk_test_[A-Za-z0-9]+$/.test(secret)) {
+    throw new Error('BLOCKED: only sk_test_ Stripe credentials are permitted.');
+  }
+  const schema = `hdux_e2e_${randomUUID().replace(/-/g, '')}`;
+  const isolatedUrl = new URL(database);
+  if (!['postgres:', 'postgresql:'].includes(isolatedUrl.protocol)) {
+    throw new Error('BLOCKED: TEST_DATABASE_URL must be a PostgreSQL connection URL.');
+  }
+  // No public fallback in search_path: migrations and both pools use only this schema.
+  isolatedUrl.searchParams.set('options', `-c search_path=${schema}`);
+  const overrides = {
+    DATABASE_URL: isolatedUrl.toString(),
+    STRIPE_WEBHOOK_SECRET: `whsec_${randomUUID()}`,
+    STRIPE_PRICE_ID: price,
+    SERVICE_URL: 'http://127.0.0.1',
+    SMTP_HOST: '', // Do not send email to the checkout identity during this test.
+  };
+  const previous = new Map(Object.keys(overrides).map(key => [key, process.env[key]]));
+  let admin: Pool | undefined;
+  let pool: Pool | undefined;
+  let closeDatabase: (() => Promise<void>) | undefined;
+  let server: http.Server | undefined;
+  let directory: string | undefined;
+  let schemaCreated = false;
+  let sessionId: string | undefined;
+  const stripe = new Stripe(secret, { timeout: 10_000, maxNetworkRetries: 0 });
+  try {
+    admin = new Pool({ connectionString: database, connectionTimeoutMillis: 10_000 });
+    await admin.query(`CREATE SCHEMA "${schema}"`);
+    schemaCreated = true;
+    Object.assign(process.env, overrides);
+    vi.resetModules();
+    // Capture the service pool's disposer before any later import/setup can fail.
+    const db = await import('./db');
+    closeDatabase = db.closeDatabase;
+    await db.migrate();
+    pool = new Pool({ connectionString: isolatedUrl.toString(), connectionTimeoutMillis: 10_000 });
+    server = http.createServer();
+    await new Promise<void>((resolve, reject) => {
+      server!.once('error', reject);
+      server!.listen(0, '127.0.0.1', resolve);
     });
+    const address = server.address();
+    if (!address || typeof address === 'string') throw new Error('Missing loopback address');
+    const base = `http://127.0.0.1:${address.port}`;
+    process.env.SERVICE_URL = base;
+    const { app } = await import('./index');
+    server.on('request', app);
+    const started = Math.floor(Date.now() / 1000);
+    const checkout = await fetch(`${base}/v1/checkout/session`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        success_url: `${base}/v1/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${base}/health`,
+      }),
+      signal: AbortSignal.timeout(20_000),
+    });
+    expect(checkout.status).toBe(200);
+    const { url } = await checkout.json() as { url: string };
+    // Hosted Checkout embeds the session ID in its URL; never print the URL or ID.
+    const checkoutUrl = new URL(url);
+    expect(checkoutUrl.origin).toBe('https://checkout.stripe.com');
+    sessionId = checkoutUrl.pathname.match(/\bcs_test_[A-Za-z0-9]+/)?.[0];
+    if (!sessionId) throw new Error('Expected a test-mode Checkout session URL');
+    const initial = await stripe.checkout.sessions.retrieve(sessionId);
+    expect(initial.livemode).toBe(false);
+    expect(initial.status).toBe('open');
+    expect(initial.metadata?.product).toBe('hdux-pro');
+    directory = await mkdtemp(join(tmpdir(), 'hdux-checkout-'));
+    const checkoutFile = join(directory, 'checkout-url.txt');
+    await writeFile(checkoutFile, url, { mode: 0o600 });
+    console.info(`Private operator action: complete Stripe TEST checkout using ${checkoutFile} within 180 seconds. No public endpoint is needed.`);
 
-    it(
-      'issues a key via webhook and validates / rejects it correctly',
-      async () => {
-        // ── Step 1: Create a real Stripe test-mode checkout session ──────────
-        const session = await stripe.checkout.sessions.create({
-          mode: 'payment',
-          line_items: [{ price: STRIPE_PRICE_ID, quantity: 1 }],
-          success_url: 'https://hdux.dev/success',
-          cancel_url: 'https://hdux.dev',
-          customer_email: 'e2e-test@hdux.dev',
-        });
-
-        expect(session.id).toBeTruthy();
-
-        // ── Step 2: Build a signed checkout.session.completed event ──────────
-        // We set payment_status = 'paid' to simulate a completed payment.
-        // The webhook handler will call stripe.checkout.sessions.listLineItems(session.id)
-        // which hits the real Stripe test API and returns the HDUX Pro price line item.
-        const eventPayload = {
-          id: `evt_test_e2e_${Date.now()}`,
-          object: 'event',
-          api_version: '2023-10-16',
-          created: Math.floor(Date.now() / 1000),
-          type: 'checkout.session.completed',
-          data: {
-            object: {
-              ...session,
-              payment_status: 'paid',
-            },
-          },
-          livemode: false,
-          pending_webhooks: 1,
-          request: null,
-        };
-
-        const payloadString = JSON.stringify(eventPayload);
-        const signature = stripe.webhooks.generateTestHeaderString({
-          payload: payloadString,
-          secret: TEST_WEBHOOK_SECRET,
-        });
-
-        // ── Step 3: POST to the webhook endpoint ─────────────────────────────
-        const webhookRes = await fetch(`${serverUrl}/api/stripe/webhook`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'stripe-signature': signature,
-          },
-          body: payloadString,
-        });
-
-        expect(webhookRes.status).toBe(200);
-        const webhookBody = (await webhookRes.json()) as { received: boolean };
-        expect(webhookBody.received).toBe(true);
-
-        // ── Step 4: Confirm the key was written to the database ──────────────
-        const dbResult = await pool.query<{ key: string }>(
-          'SELECT key FROM licenses WHERE session_id = $1',
-          [session.id],
-        );
-        expect(dbResult.rows).toHaveLength(1);
-        const key = dbResult.rows[0].key;
-        expect(key).toMatch(
-          /^HDUX-PRO-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/,
-        );
-
-        // ── Step 5: validateLicense accepts the issued key ───────────────────
-        const acceptResult = await validateLicense(key, validateUrl);
-        expect(acceptResult.valid).toBe(true);
-
-        // ── Step 6: Revoke the key ────────────────────────────────────────────
-        await pool.query('UPDATE licenses SET revoked_at = NOW() WHERE key = $1', [key]);
-
-        // ── Step 7: validateLicense rejects the revoked key ──────────────────
-        const revokedResult = await validateLicense(key, validateUrl);
-        expect(revokedResult.valid).toBe(false);
-        if (!revokedResult.valid) {
-          expect(revokedResult.reason).toBe('License revoked');
+    let event: Stripe.Event | undefined;
+    const deadline = Date.now() + 180_000;
+    while (Date.now() < deadline) {
+      const completed = await stripe.checkout.sessions.retrieve(sessionId);
+      expect(completed.livemode).toBe(false);
+      if (completed.status === 'complete' && completed.payment_status === 'paid') {
+        // Paginate rather than assume the matching event is in the first page.
+        for await (const candidate of stripe.events.list({
+          type: 'checkout.session.completed', created: { gte: started - 5 }, limit: 100,
+        })) {
+          if ((candidate.data.object as Stripe.Checkout.Session).id === sessionId) {
+            event = candidate;
+            break;
+          }
         }
-
-        // ── Cleanup: remove the test license row ──────────────────────────────
-        await pool.query('DELETE FROM licenses WHERE session_id = $1', [session.id]);
+        if (event) break;
+      }
+      await new Promise(resolve => setTimeout(resolve, 2_000));
+    }
+    if (!event) throw new Error('BLOCKED: no completed paid test checkout and matching Stripe event observed; E2E did not complete.');
+    expect(event.livemode).toBe(false);
+    const completed = event.data.object as Stripe.Checkout.Session;
+    expect(completed.id).toBe(sessionId);
+    expect(completed.status).toBe('complete');
+    expect(completed.payment_status).toBe('paid');
+    const payload = JSON.stringify(event); // Preserve the real event; do not fabricate paid status.
+    const webhook = await fetch(`${base}/api/stripe/webhook`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'stripe-signature': stripe.webhooks.generateTestHeaderString({
+          payload, secret: overrides.STRIPE_WEBHOOK_SECRET,
+        }),
       },
-      60_000, // Stripe API calls + DB round-trips can take several seconds
-    );
-  },
-);
+      body: payload,
+      signal: AbortSignal.timeout(20_000),
+    });
+    expect(webhook.status).toBe(200);
+    expect(await webhook.json()).toEqual({ received: true });
+    const result = await pool.query<{ key: string }>('SELECT key FROM licenses WHERE session_id = $1', [sessionId]);
+    expect(result.rows).toHaveLength(1);
+    const key = result.rows[0].key;
+    const lookup = await fetch(`${base}/v1/license/by-session/${sessionId}`);
+    expect(lookup.status).toBe(200);
+    expect((await lookup.json() as { key: string }).key).toBe(key);
+    // The actual validator is stateless (no cache); both calls reach the service.
+    expect(await validateLicense(key, `${base}/v1/license/validate`)).toEqual({ valid: true });
+    await pool.query('UPDATE licenses SET revoked_at = NOW() WHERE key = $1', [key]);
+    expect(await validateLicense(key, `${base}/v1/license/validate`)).toEqual({ valid: false, reason: 'License revoked' });
+    console.info('Verified: app checkout, Stripe-confirmed paid test session, matching real event replayed on loopback, correlated key, validator accepted then rejected after revocation.');
+  } finally {
+    // Attempt every disposer, even after partial setup or another cleanup failure.
+    const failures: string[] = [];
+    const cleanup = async (name: string, action: () => Promise<unknown>) => {
+      try { await action(); } catch { failures.push(name); }
+    };
+    if (server?.listening) await cleanup('server', () => new Promise<void>((resolve, reject) => {
+      server!.close(error => error ? reject(error) : resolve());
+      server!.closeAllConnections();
+    }));
+    if (closeDatabase) await cleanup('service pool', closeDatabase);
+    if (pool) await cleanup('test pool', () => pool!.end());
+    if (schemaCreated) await cleanup('test schema and records', () => admin!.query(`DROP SCHEMA "${schema}" CASCADE`));
+    if (admin) await cleanup('admin pool', () => admin!.end());
+    if (directory) await cleanup('private checkout file', () => rm(directory!, { recursive: true, force: true }));
+    if (sessionId) await cleanup('open Stripe test session', async () => {
+      const session = await stripe.checkout.sessions.retrieve(sessionId!);
+      if (session.status === 'open') await stripe.checkout.sessions.expire(sessionId!);
+    });
+    for (const [key, value] of previous) {
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    }
+    vi.resetModules();
+    if (failures.length) throw new Error(`E2E cleanup failed: ${failures.join(', ')}`);
+  }
+}, 240_000);
