@@ -2,6 +2,10 @@ import { Pool } from 'pg';
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
+export async function closeDatabase(): Promise<void> {
+  await pool.end();
+}
+
 const SCHEMA = `
   CREATE TABLE IF NOT EXISTS licenses (
     id          SERIAL PRIMARY KEY,
