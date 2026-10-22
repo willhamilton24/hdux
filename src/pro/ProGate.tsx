@@ -21,11 +21,16 @@ function BuyButton() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ cancel_url: here }),
       });
+      if (!res.ok) {
+        throw new Error(`Checkout request failed: ${res.status}`);
+      }
       const data = (await res.json()) as { url?: string };
       if (data.url && typeof window !== "undefined") {
         window.location.href = data.url;
       }
     } catch {
+      // Swallow and fall through to re-enable the button
+    } finally {
       setLoading(false);
     }
   };

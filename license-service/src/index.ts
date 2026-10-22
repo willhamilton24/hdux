@@ -42,11 +42,22 @@ app.post(
           const hasPro = lineItems.data.some((item) => item.price?.id === STRIPE_PRICE_ID);
 
           if (hasPro) {
-            const key = generateKey();
             const email = session.customer_details?.email ?? null;
-            await createLicense({ key, sessionId: session.id, email });
+            // Idempotent across Stripe retries: reuse the existing key rather
+            // than generating a new one the DB would silently discard
+            const existing = await findLicenseBySession(session.id);
+            const key = existing?.key ?? generateKey();
+            if (!existing) {
+              await createLicense({ key, sessionId: session.id, email });
+            }
             if (email) {
-              await sendLicenseEmail(email, key);
+              // Email is best-effort: the license row is already committed, so
+              // an SMTP failure must not make Stripe retry the whole event
+              try {
+                await sendLicenseEmail(email, key);
+              } catch (emailErr) {
+                console.error('License email failed (key still issued):', emailErr);
+              }
             }
           }
         }
@@ -54,7 +65,7 @@ app.post(
 
       res.json({ received: true });
     } catch (err) {
-      // 500 so Stripe retries delivery; the ON CONFLICT insert keeps retries idempotent
+      // 500 so Stripe retries delivery; the session-id lookup above keeps retries idempotent
       console.error('Webhook processing failed:', err);
       res.status(500).json({ error: 'Internal error' });
     }
@@ -63,24 +74,47 @@ app.post(
 
 app.use(express.json());
 
-// Create a Stripe Checkout session for HDUX Pro
+function createCheckoutSession(opts: {
+  email?: string;
+  success_url?: string;
+  cancel_url?: string;
+}): Promise<Stripe.Checkout.Session> {
+  return stripe.checkout.sessions.create({
+    mode: 'payment',
+    line_items: [{ price: STRIPE_PRICE_ID, quantity: 1 }],
+    customer_email: opts.email,
+    success_url:
+      opts.success_url ??
+      `${BASE_URL}/v1/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: opts.cancel_url ?? 'https://hdux.dev',
+    metadata: { product: 'hdux-pro' },
+  });
+}
+
+// Create a Stripe Checkout session for HDUX Pro (used by the ProGate buy button)
 app.post('/v1/checkout/session', async (req, res): Promise<void> => {
   const body = req.body as { email?: string; success_url?: string; cancel_url?: string };
   try {
-    const session = await stripe.checkout.sessions.create({
-      mode: 'payment',
-      line_items: [{ price: STRIPE_PRICE_ID, quantity: 1 }],
-      customer_email: body.email,
-      success_url:
-        body.success_url ??
-        `${BASE_URL}/v1/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: body.cancel_url ?? 'https://hdux.dev',
-      metadata: { product: 'hdux-pro' },
-    });
+    const session = await createCheckoutSession(body);
     res.json({ url: session.url });
   } catch (err) {
     console.error('Failed to create checkout session:', err);
     res.status(500).json({ error: 'Failed to create checkout session' });
+  }
+});
+
+// Plain-link entry point (e.g. the README buy link): create a session and
+// redirect the browser straight to Stripe Checkout
+app.get('/v1/checkout/session', async (_req, res): Promise<void> => {
+  try {
+    const session = await createCheckoutSession({});
+    if (!session.url) {
+      throw new Error('Checkout session has no URL');
+    }
+    res.redirect(303, session.url);
+  } catch (err) {
+    console.error('Failed to create checkout session:', err);
+    res.status(500).send('<h1>Failed to start checkout — please try again</h1>');
   }
 });
 
@@ -111,7 +145,7 @@ app.get('/v1/checkout/success', async (req, res): Promise<void> => {
 </head>
 <body>
   <h1>HDUX PRO</h1>
-  <p>Thank you for your purchase! Your license key is below and has been sent to your email.</p>
+  <p>Thank you for your purchase! Your license key is below. If you entered an email at checkout, a copy has been sent there.</p>
   <div class="key">${key}</div>
   <p>Add it to your app:</p>
   <pre>&lt;HduxProProvider licenseKey="${key}"&gt;\n  {/* your app */}\n&lt;/HduxProProvider&gt;</pre>
