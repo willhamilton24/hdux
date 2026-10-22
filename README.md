@@ -310,7 +310,7 @@ Open-core npm library: free base components drive adoption, paid "pro" pack (dat
 - [x] Expand the component set beyond Box/Text/Bars — inputs, tables, modals, and HUD-style charts are what paying users need
 - [x] Create a paid Pro tier (advanced widgets + templates) gated by license key, sold via the shared Stripe + license-service stack (Stripe product/price provisioned)
 - [x] Stand up the license service (`api.hdux.dev/v1/license/validate` has no backend): a small web service + `render.yaml` that issues keys from the Stripe checkout webhook and validates them on request
-- [ ] Close the free-Pro hole: `src/pro/validateLicense.ts` accepts any well-formed key when the service is unreachable — fail closed (or use signed offline keys) once the license service exists
+- [x] Close the free-Pro hole: `src/pro/validateLicense.ts` accepts any well-formed key when the service is unreachable — fail closed (or use signed offline keys) once the license service exists
 - [x] Add a "Buy HDUX Pro" checkout path (Stripe Checkout session against the provisioned price) linked from README and the Pro gate overlay, delivering the license key by email
 - [ ] Run a Stripe test-mode E2E check: checkout → webhook → key issued → `validateLicense` accepts the key and rejects a revoked one
 - [ ] Build 2-3 polished full-page demo templates (ops dashboard, game lobby, landing page) as the visual sales pitch
