@@ -299,6 +299,15 @@ function App() {
 
 Wrap your app (or any subtree) in `<HduxProProvider licenseKey="…">`. The key is validated once on mount against `https://api.hdux.dev/v1/license/validate`. If the service is unreachable, any well-formed key (`HDUX-PRO-XXXX-XXXX-XXXX-XXXX`) is accepted as a fallback. Pro components without a valid provider show a gate overlay instead of the component.
 
+## Support HDUX
+
+Support the development of HDUX through one of these channels:
+
+- **[GitHub Sponsors](https://github.com/sponsors/willhamilton24)** — Monthly or one-time sponsorships to support open-source development
+- **Buy HDUX Pro** — [Purchase a license](https://api.hdux.dev/v1/checkout/session) for advanced components and templates
+
+Your support helps fund maintenance, new features, and the continuous evolution of this framework.
+
 ## License
 
 MIT
@@ -315,7 +324,7 @@ Open-core npm library: free base components drive adoption, paid "pro" pack (dat
 - [x] Add a "Buy HDUX Pro" checkout path (Stripe Checkout session against the provisioned price) linked from README and the Pro gate overlay, delivering the license key by email
 - [ ] Run a Stripe test-mode E2E check: checkout → webhook → key issued → `validateLicense` accepts the key and rejects a revoked one
 - [x] Build 2-3 polished full-page demo templates (ops dashboard, game lobby, landing page) as the visual sales pitch
-- [ ] Add GitHub Sponsors/Polar funding links as a secondary revenue channel
+- [x] Add GitHub Sponsors/Polar funding links as a secondary revenue channel
 - [ ] Launch posts with animation GIFs on r/reactjs, Hacker News, and X; submit to component-library directories (waits on the deployment switch)
 - [ ] Archive HDUI-Prototype with a pointer here so traffic consolidates on one repo (migration docs drafted; archiving the public repo and pointing its traffic here waits on the deployment switch)
 

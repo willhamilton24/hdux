@@ -48,6 +48,12 @@
   "bugs": {
     "url": "https://github.com/willhamilton24/hdux/issues"
   },
+  "funding": [
+    {
+      "type": "github",
+      "url": "https://github.com/sponsors/willhamilton24"
+    }
+  ],
   "peerDependencies": {
     "react": ">=18.0.0",
     "react-dom": ">=18.0.0"
