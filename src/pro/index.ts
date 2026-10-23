@@ -33,6 +33,7 @@ export type {
   OpsMetric,
   OpsChartSeries,
   OpsTableRow,
+  OpsServiceNode,
 } from "./templates/OpsDashboard";
 
 export { GameLobby } from "./templates/GameLobby";
@@ -41,3 +42,10 @@ export type {
   LobbyPlayer,
   LobbyMatchInfo,
 } from "./templates/GameLobby";
+
+export { LandingPage } from "./templates/LandingPage";
+export type {
+  LandingPageProps,
+  LandingFeature,
+  LandingStats,
+} from "./templates/LandingPage";

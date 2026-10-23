@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { HduxThemeProvider } from "../../../theme/ThemeProvider";
-import { TopBar, BottomBar, BarLeft, BarRight, BarElement, ThemeSelector } from "../../../components/Bar";
+import { TopBar, BottomBar, BarLeft, BarCenter, BarRight, BarElement, ThemeSelector } from "../../../components/Bar";
 import { Box } from "../../../components/Box";
 import { Text } from "../../../components/Text";
 import { AreaChart } from "../../components/AreaChart";
@@ -9,35 +9,55 @@ import { DataGrid } from "../../components/DataGrid";
 import { ProGate } from "../../ProGate";
 import type { OpsDashboardProps } from "./types";
 import "./OpsDashboard.css";
+import "../responsive.css";
 
 const DEFAULT_METRICS = [
-  { label: "CPU", value: 68 },
-  { label: "MEM", value: 82 },
+  { label: "CPU",  value: 68 },
+  { label: "MEM",  value: 82 },
   { label: "DISK", value: 44 },
-  { label: "NET", value: 91 },
+  { label: "NET",  value: 91 },
 ];
 
 const DEFAULT_LABELS = ["00:00", "02:00", "04:00", "06:00", "08:00", "10:00", "12:00", "14:00"];
 const DEFAULT_SERIES = [
-  { label: "CPU %",  data: [22, 35, 55, 48, 68, 72, 60, 68], color: "#00d4ff" },
-  { label: "MEM %",  data: [60, 65, 70, 72, 75, 80, 82, 82], color: "#7b2fff" },
+  { label: "CPU %", data: [22, 35, 55, 48, 68, 72, 60, 68], color: "#00d4ff" },
+  { label: "MEM %", data: [60, 65, 70, 72, 75, 80, 82, 82], color: "#7b2fff" },
 ];
 
 const DEFAULT_ROWS = [
-  { id: 1, time: "14:22:01", level: "INFO",  service: "api-gateway",    message: "Health check OK" },
-  { id: 2, time: "14:21:44", level: "WARN",  service: "db-replica",     message: "Replication lag 180ms" },
-  { id: 3, time: "14:20:11", level: "INFO",  service: "auth-service",   message: "Token issued uid=8821" },
-  { id: 4, time: "14:19:55", level: "ERROR", service: "worker-3",       message: "Job timeout after 30s" },
-  { id: 5, time: "14:18:30", level: "INFO",  service: "cache",          message: "Eviction cycle complete" },
-  { id: 6, time: "14:17:12", level: "DEBUG", service: "api-gateway",    message: "Rate limit window reset" },
+  { id: 1,  time: "14:22:01", level: "INFO",  service: "api-gateway",  message: "Health check OK" },
+  { id: 2,  time: "14:21:44", level: "WARN",  service: "db-replica",   message: "Replication lag 180ms" },
+  { id: 3,  time: "14:20:11", level: "INFO",  service: "auth-service", message: "Token issued uid=8821" },
+  { id: 4,  time: "14:19:55", level: "ERROR", service: "worker-3",     message: "Job timeout after 30s" },
+  { id: 5,  time: "14:18:30", level: "INFO",  service: "cache",        message: "Eviction cycle complete" },
+  { id: 6,  time: "14:17:12", level: "DEBUG", service: "api-gateway",  message: "Rate limit window reset" },
+  { id: 7,  time: "14:16:05", level: "INFO",  service: "scheduler",    message: "Cron job queue-flush ran" },
+  { id: 8,  time: "14:14:50", level: "WARN",  service: "worker-1",     message: "Memory headroom < 15%" },
+  { id: 9,  time: "14:13:29", level: "INFO",  service: "cdn-edge",     message: "Cache purge confirmed" },
+  { id: 10, time: "14:12:07", level: "ERROR", service: "worker-2",     message: "Unhandled promise rejection" },
 ];
 
+const SERVICE_NODES = [
+  { name: "api-gateway",  status: "ok"   as const },
+  { name: "auth-service", status: "ok"   as const },
+  { name: "db-primary",   status: "ok"   as const },
+  { name: "db-replica",   status: "warn" as const },
+  { name: "cache",        status: "ok"   as const },
+  { name: "worker-1",     status: "warn" as const },
+  { name: "worker-2",     status: "err"  as const },
+  { name: "worker-3",     status: "err"  as const },
+  { name: "scheduler",    status: "ok"   as const },
+  { name: "cdn-edge",     status: "ok"   as const },
+];
+
+const NODE_COLORS = { ok: "#00e676", warn: "#ff6f00", err: "#ff1744" } as const;
+
 const LOG_COLUMNS = [
-  { key: "time" as const, header: "TIME", width: 90 },
+  { key: "time"    as const, header: "TIME",    width: 88 },
   {
     key: "level" as const,
     header: "LEVEL",
-    width: 70,
+    width: 68,
     sortable: true,
     render: (val: unknown) => {
       const colors: Record<string, string> = {
@@ -46,19 +66,30 @@ const LOG_COLUMNS = [
       return <span style={{ color: colors[val as string] ?? "#00d4ff" }}>{val as string}</span>;
     },
   },
-  { key: "service" as const, header: "SERVICE", sortable: true },
+  { key: "service" as const, header: "SERVICE", width: 130, sortable: true },
   { key: "message" as const, header: "MESSAGE" },
 ];
 
 type LogRow = typeof DEFAULT_ROWS[number];
 
+function useClock() {
+  const [time, setTime] = useState(() => new Date().toLocaleTimeString("en-GB"));
+  useEffect(() => {
+    const id = setInterval(() => setTime(new Date().toLocaleTimeString("en-GB")), 1000);
+    return () => clearInterval(id);
+  }, []);
+  return time;
+}
+
 function OpsDashboardInner({
   title = "OPS DASHBOARD",
   systemName = "HDUX CONTROL",
-  metrics = DEFAULT_METRICS,
-  chartSeries = DEFAULT_SERIES,
+  demoMode = false,
+  metrics = demoMode ? DEFAULT_METRICS : [],
+  chartSeries = demoMode ? DEFAULT_SERIES : [],
   chartLabels = DEFAULT_LABELS,
-  tableRows = DEFAULT_ROWS,
+  tableRows = demoMode ? DEFAULT_ROWS : [],
+  serviceNodes = demoMode ? SERVICE_NODES : [],
   className,
   style,
 }: OpsDashboardProps) {
@@ -67,6 +98,12 @@ function OpsDashboardInner({
     const id = setTimeout(() => setLoaded(true), 200);
     return () => clearTimeout(id);
   }, []);
+
+  const clock = useClock();
+  const errCount   = serviceNodes.filter((n) => n.status === "err").length;
+  const warnCount  = serviceNodes.filter((n) => n.status === "warn").length;
+  const statusText = errCount > 0 ? `${errCount} ERROR` : warnCount > 0 ? `${warnCount} WARN` : serviceNodes.length ? "OPERATIONAL" : "NO SERVICE DATA";
+  const statusColor = errCount > 0 ? "#ff1744" : warnCount > 0 ? "#ff6f00" : "#00e676";
 
   return (
     <HduxThemeProvider
@@ -93,6 +130,11 @@ function OpsDashboardInner({
               <Text variant="body">{systemName}</Text>
             </BarElement>
           </BarLeft>
+          <BarCenter>
+            <BarElement borderless>
+              <span className="hdux-ops-dashboard__clock">{clock}</span>
+            </BarElement>
+          </BarCenter>
           <BarRight>
             <BarElement>
               <Text variant="body">{title}</Text>
@@ -104,13 +146,9 @@ function OpsDashboardInner({
         </TopBar>
 
         <div className="hdux-ops-dashboard__body">
-          {/* Left column: gauges */}
+          {/* ── Left sidebar ───────────────────────────── */}
           <div className="hdux-ops-dashboard__sidebar">
-            <Box
-              animation="standard"
-              hasLoaded={loaded}
-              fullBorder
-            >
+            <Box animation="standard" hasLoaded={loaded} fullBorder>
               <GaugeCluster
                 title="SYSTEM VITALS"
                 gauges={metrics.map((m) => ({
@@ -124,9 +162,27 @@ function OpsDashboardInner({
                 gaugeSize={90}
               />
             </Box>
+
+            {/* Service health nodes */}
+            <Box animation="verticalFirst" hasLoaded={loaded} fullBorder>
+              <div className="hdux-ops-dashboard__nodes">
+                <Text variant="subheading">SERVICE MAP</Text>
+                <div className="hdux-ops-dashboard__node-grid">
+                  {serviceNodes.map((node) => (
+                    <div key={node.name} className="hdux-ops-dashboard__node">
+                      <span
+                        className="hdux-ops-dashboard__node-dot"
+                        style={{ background: NODE_COLORS[node.status] }}
+                      />
+                      <span className="hdux-ops-dashboard__node-name">{node.name}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </Box>
           </div>
 
-          {/* Main area */}
+          {/* ── Main area ──────────────────────────────── */}
           <div className="hdux-ops-dashboard__main">
             <div className="hdux-ops-dashboard__charts">
               {chartSeries.map((s, i) => (
@@ -148,7 +204,7 @@ function OpsDashboardInner({
               <DataGrid<LogRow>
                 columns={LOG_COLUMNS}
                 rows={tableRows as LogRow[]}
-                pageSize={5}
+                pageSize={6}
                 searchable
               />
             </Box>
@@ -163,7 +219,9 @@ function OpsDashboardInner({
           </BarLeft>
           <BarRight>
             <BarElement>
-              <Text variant="body">OPERATIONAL</Text>
+              <span className="hdux-ops-dashboard__status" style={{ color: statusColor }}>
+                ● {statusText}
+              </span>
             </BarElement>
           </BarRight>
         </BottomBar>

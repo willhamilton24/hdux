@@ -9,6 +9,10 @@ export interface LobbyPlayer {
   team?: "A" | "B";
   /** Optional stat shown next to the name */
   stat?: string;
+  /** Measured network latency in milliseconds. */
+  pingMs?: number;
+  /** Numeric matchmaking rating, independent of the display stat. */
+  mmr?: number;
   /** Whether this is the local/current player */
   isLocalPlayer?: boolean;
 }
