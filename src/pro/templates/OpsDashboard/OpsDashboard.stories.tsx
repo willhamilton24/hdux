@@ -1,15 +1,21 @@
+import { expect, waitFor } from "storybook/test";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { HduxProProvider } from "../../ProProvider";
 import { OpsDashboard } from "./OpsDashboard";
 
-const PRO_KEY = "HDUX-PRO-TEST-0000-0000-0000";
+import { PRO_KEY, VALIDATION_URL, mockProValidation } from "../../../../.storybook/proFixture";
 
 const meta: Meta<typeof OpsDashboard> = {
   title: "HDUX Pro/Templates/OpsDashboard",
   component: OpsDashboard,
+  beforeEach: mockProValidation,
+  play: async ({ canvasElement }) => {
+    await waitFor(() => expect(canvasElement.querySelector(".hdux-pro-gate")).toBeNull());
+    await expect(canvasElement.querySelector(".hdux-ops-dashboard")).not.toBeNull();
+  },
   decorators: [
     (Story) => (
-      <HduxProProvider licenseKey={PRO_KEY}>
+      <HduxProProvider licenseKey={PRO_KEY} validationUrl={VALIDATION_URL}>
         <Story />
       </HduxProProvider>
     ),
@@ -22,7 +28,7 @@ export default meta;
 
 type Story = StoryObj<typeof OpsDashboard>;
 
-export const Default: Story = {};
+export const Default: Story = { args: { demoMode: true } };
 
 export const CustomData: Story = {
   name: "Custom Data",

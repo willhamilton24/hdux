@@ -8,6 +8,7 @@ import { StatBar } from "../../../components/StatBar";
 import { ProGate } from "../../ProGate";
 import type { GameLobbyProps, LobbyPlayer } from "./types";
 import "./GameLobby.css";
+import "../responsive.css";
 
 const STATUS_COLORS: Record<LobbyPlayer["status"], string> = {
   ready:     "#00e676",
@@ -36,11 +37,6 @@ const DEFAULT_MATCH = {
   countdown: 0,
 };
 
-// Simulated ping values per player (ms)
-const PING_MAP: Record<number | string, number> = {
-  1: 24, 2: 31, 3: 112, 4: 18, 5: 88, 6: 42,
-};
-
 function pingColor(ms: number) {
   if (ms < 50) return "#00e676";
   if (ms < 100) return "#ff6f00";
@@ -49,7 +45,7 @@ function pingColor(ms: number) {
 
 function PlayerRow({ player }: { player: LobbyPlayer }) {
   const color = STATUS_COLORS[player.status];
-  const ping = PING_MAP[player.id];
+  const ping = player.pingMs;
   return (
     <div
       className={[
@@ -83,17 +79,13 @@ function PlayerRow({ player }: { player: LobbyPlayer }) {
 }
 
 function TeamSection({ label, players }: { label: string; players: LobbyPlayer[] }) {
-  const avgMmr = Math.round(
-    players.reduce((sum, p) => {
-      const n = parseInt((p.stat ?? "0").replace(/[^\d]/g, ""), 10);
-      return sum + (isNaN(n) ? 0 : n);
-    }, 0) / (players.length || 1)
-  );
+  const ratings = players.flatMap((p) => p.mmr !== undefined && Number.isFinite(p.mmr) ? [p.mmr] : []);
+  const avgMmr = ratings.length ? Math.round(ratings.reduce((sum, mmr) => sum + mmr, 0) / ratings.length) : null;
   return (
     <div className="hdux-game-lobby__team">
       <div className="hdux-game-lobby__team-header">
         <Text variant="subheading">{label}</Text>
-        {avgMmr > 0 && (
+        {avgMmr !== null && (
           <span className="hdux-game-lobby__team-avg">AVG {avgMmr} MMR</span>
         )}
       </div>
@@ -133,7 +125,7 @@ function GameLobbyInner({
   const teamA       = players.filter((p) => p.team === "A");
   const teamB       = players.filter((p) => p.team === "B");
   const hasTeams    = teamA.length > 0 && teamB.length > 0;
-  const allReady    = readyCount === players.length;
+  const allReady    = players.length > 0 && readyCount === players.length;
 
   function handleReadyToggle() {
     const next = !ready;
@@ -218,6 +210,7 @@ function GameLobbyInner({
           {/* Player list */}
           <Box animation="standard" hasLoaded={loaded} fullBorder>
             <div className="hdux-game-lobby__player-list">
+              {players.length === 0 && <Text variant="body">Waiting for players</Text>}
               {hasTeams ? (
                 <>
                   <TeamSection label="TEAM ALPHA" players={teamA} />
@@ -236,13 +229,14 @@ function GameLobbyInner({
               <StatBar
                 label="PLAYERS READY"
                 value={readyCount}
-                max={players.length}
+                max={Math.max(1, players.length)}
                 color={allReady ? "#00e676" : color}
                 showValue
                 height={8}
               />
               <div className="hdux-game-lobby__ready-row">
                 <Button
+                  disabled={players.length === 0}
                   onClick={handleReadyToggle}
                   color={ready ? "#00e676" : undefined}
                 >

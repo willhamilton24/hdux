@@ -20,8 +20,9 @@ export interface LandingPageProps {
   brandName?: string;
   /** Primary CTA label */
   ctaLabel?: string;
-  /** Called when the CTA is clicked */
-  onCtaClick?: () => void;
+  /** Start checkout using the host application's environment-backed integration.
+   * Reject on failure; the template displays feedback and prevents duplicate requests. */
+  onCtaClick?: () => void | Promise<void>;
   /** Features shown in the three-column grid */
   features?: LandingFeature[];
   /** Stats strip below the hero */

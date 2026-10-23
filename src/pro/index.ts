@@ -33,6 +33,7 @@ export type {
   OpsMetric,
   OpsChartSeries,
   OpsTableRow,
+  OpsServiceNode,
 } from "./templates/OpsDashboard";
 
 export { GameLobby } from "./templates/GameLobby";

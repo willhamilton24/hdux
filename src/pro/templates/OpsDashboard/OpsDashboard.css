@@ -30,7 +30,7 @@
 
 .hdux-ops-dashboard__charts {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr));
   gap: 16px;
 }
 
@@ -87,3 +87,6 @@
   font-weight: 700;
   letter-spacing: 0.15em;
 }
+
+.hdux-ops-dashboard .hdux-datagrid__search { min-width: 0; }
+.hdux-ops-dashboard .hdux-datagrid__toolbar { flex-wrap: wrap; }

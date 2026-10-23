@@ -1,0 +1,36 @@
+/* Scoped to full-page templates; keep narrow layouts in document flow. */
+:is(.hdux-landing, .hdux-game-lobby, .hdux-ops-dashboard) {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+:is(.hdux-landing, .hdux-game-lobby, .hdux-ops-dashboard) .hdux-box {
+  min-width: 0;
+}
+:is(.hdux-landing, .hdux-ops-dashboard) .hdux-area-chart {
+  max-width: 100%;
+}
+:is(.hdux-landing, .hdux-ops-dashboard) .hdux-area-chart__svg {
+  max-width: 100%;
+  height: auto;
+}
+@media (max-width: 700px) {
+  :is(.hdux-landing, .hdux-game-lobby, .hdux-ops-dashboard) .hdux-bar {
+    position: relative;
+    flex-wrap: wrap;
+  }
+  :is(.hdux-landing, .hdux-game-lobby, .hdux-ops-dashboard) .hdux-bar-section {
+    flex: 1 1 auto;
+    min-width: 0;
+    flex-wrap: wrap;
+  }
+  :is(.hdux-landing, .hdux-game-lobby, .hdux-ops-dashboard) .hdux-bar-element {
+    min-width: 0;
+    white-space: normal;
+    padding: 8px;
+  }
+  :is(.hdux-landing__body, .hdux-game-lobby__body, .hdux-ops-dashboard__body) {
+    padding-top: 16px;
+  }
+  .hdux-ops-dashboard__body { flex-direction: column; }
+  .hdux-ops-dashboard__sidebar { flex-basis: auto; min-width: 0; }
+}

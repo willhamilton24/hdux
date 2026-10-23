@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { HduxThemeProvider } from "../../../theme/ThemeProvider";
 import { TopBar, BottomBar, BarLeft, BarCenter, BarRight, BarElement, ThemeSelector } from "../../../components/Bar";
 import { Box } from "../../../components/Box";
@@ -10,8 +10,7 @@ import { AreaChart } from "../../components/AreaChart";
 import { ProGate } from "../../ProGate";
 import type { LandingPageProps } from "./types";
 import "./LandingPage.css";
-
-const CHECKOUT_ENDPOINT = "https://api.hdux.dev/v1/checkout/session";
+import "../responsive.css";
 
 const DEFAULT_FEATURES = [
   {
@@ -58,6 +57,9 @@ function LandingPageInner({
   className,
   style,
 }: LandingPageProps) {
+  const pendingRef = useRef(false);
+  const [pending, setPending] = useState(false);
+  const [checkoutError, setCheckoutError] = useState("");
   const [loaded, setLoaded] = useState(false);
   const [frameIdx, setFrameIdx] = useState(0);
   const [gaugeValues, setGaugeValues] = useState([68, 82, 44, 91]);
@@ -86,23 +88,20 @@ function LandingPageInner({
   const sparkData = SPARK_FRAMES[frameIdx].map((v, i) => ({ value: v, label: String(i) }));
 
   async function handleCta() {
-    if (onCtaClick) {
-      onCtaClick();
-      return;
-    }
+    if (pendingRef.current) return;
+    pendingRef.current = true;
+    setPending(true);
+    setCheckoutError("");
     try {
-      const here = typeof window !== "undefined" ? window.location.href : "";
-      const res = await fetch(CHECKOUT_ENDPOINT, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cancel_url: here }),
-      });
-      const data = (await res.json()) as { url?: string };
-      if (data.url && typeof window !== "undefined") {
-        window.location.href = data.url;
-      }
+      if (!onCtaClick) throw new Error("Checkout is not configured.");
+      await onCtaClick();
     } catch {
-      // swallow
+      setCheckoutError(onCtaClick
+        ? "Unable to start checkout. Please try again."
+        : "Checkout is not configured. Please contact the site owner.");
+    } finally {
+      pendingRef.current = false;
+      setPending(false);
     }
   }
 
@@ -186,9 +185,9 @@ function LandingPageInner({
                   </div>
                 </div>
 
-                <div className="hdux-landing__hero-cta">
-                  <Button onClick={() => void handleCta()} color={color}>
-                    {ctaLabel}
+                <div className="hdux-landing__hero-cta" aria-busy={pending}>
+                  <Button onClick={() => void handleCta()} color={color} disabled={pending}>
+                    {pending ? "LOADING…" : ctaLabel}
                   </Button>
                   <span className="hdux-landing__hero-sub">One-time license · Unlimited projects</span>
                 </div>
@@ -280,14 +279,14 @@ function LandingPageInner({
                     ))}
                   </ul>
                 </div>
-                <div className="hdux-landing__cta-right">
+                <div className="hdux-landing__cta-right" aria-busy={pending}>
                   <div className="hdux-landing__price-badge" style={{ borderColor: color }}>
                     <span className="hdux-landing__price-label">ONE-TIME</span>
                     <span className="hdux-landing__price-value" style={{ color }}>PRO LICENSE</span>
                     <span className="hdux-landing__price-note">Unlimited projects</span>
                   </div>
-                  <Button onClick={() => void handleCta()} color={color}>
-                    {ctaLabel}
+                  <Button onClick={() => void handleCta()} color={color} disabled={pending}>
+                    {pending ? "LOADING…" : ctaLabel}
                   </Button>
                 </div>
               </div>
@@ -295,6 +294,8 @@ function LandingPageInner({
           </section>
 
         </div>
+
+        {checkoutError && <p role="alert" className="hdux-landing__checkout-error">{checkoutError}</p>}
 
         <BottomBar static>
           <BarLeft>

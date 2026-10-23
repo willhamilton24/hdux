@@ -1,15 +1,26 @@
+import { expect, waitFor, userEvent, within, fn } from "storybook/test";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { HduxProProvider } from "../../ProProvider";
 import { LandingPage } from "./LandingPage";
 
-const PRO_KEY = "HDUX-PRO-TEST-0000-0000-0000";
+import { PRO_KEY, VALIDATION_URL, mockProValidation } from "../../../../.storybook/proFixture";
 
 const meta: Meta<typeof LandingPage> = {
   title: "HDUX Pro/Templates/LandingPage",
   component: LandingPage,
+  beforeEach: mockProValidation,
+  play: async ({ canvasElement }) => {
+    await waitFor(() => expect(canvasElement.querySelector(".hdux-pro-gate")).toBeNull());
+    await expect(canvasElement.querySelector(".hdux-landing")).not.toBeNull();
+    const buttons = (await within(canvasElement).findAllByRole("button")).filter(button =>
+      button.classList.contains("hdux-btn"));
+    await userEvent.click(buttons[0]);
+    await expect(canvasElement.querySelector('[role="alert"]')).toBeNull();
+  },
+  args: { onCtaClick: fn(async () => {}) },
   decorators: [
     (Story) => (
-      <HduxProProvider licenseKey={PRO_KEY}>
+      <HduxProProvider licenseKey={PRO_KEY} validationUrl={VALIDATION_URL}>
         <Story />
       </HduxProProvider>
     ),

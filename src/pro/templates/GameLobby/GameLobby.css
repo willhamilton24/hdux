@@ -208,3 +208,9 @@
   font-weight: 700;
   letter-spacing: 0.15em;
 }
+
+.hdux-game-lobby__player,
+.hdux-game-lobby__team-header,
+.hdux-game-lobby__countdown { flex-wrap: wrap; }
+.hdux-game-lobby__player-name { min-width: 0; flex-basis: 120px; }
+.hdux-game-lobby__player-stat { min-width: 0; }

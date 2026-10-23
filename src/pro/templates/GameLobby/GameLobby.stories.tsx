@@ -1,15 +1,21 @@
+import { expect, waitFor } from "storybook/test";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { HduxProProvider } from "../../ProProvider";
 import { GameLobby } from "./GameLobby";
 
-const PRO_KEY = "HDUX-PRO-TEST-0000-0000-0000";
+import { PRO_KEY, VALIDATION_URL, mockProValidation } from "../../../../.storybook/proFixture";
 
 const meta: Meta<typeof GameLobby> = {
   title: "HDUX Pro/Templates/GameLobby",
   component: GameLobby,
+  beforeEach: mockProValidation,
+  play: async ({ canvasElement }) => {
+    await waitFor(() => expect(canvasElement.querySelector(".hdux-pro-gate")).toBeNull());
+    await expect(canvasElement.querySelector(".hdux-game-lobby")).not.toBeNull();
+  },
   decorators: [
     (Story) => (
-      <HduxProProvider licenseKey={PRO_KEY}>
+      <HduxProProvider licenseKey={PRO_KEY} validationUrl={VALIDATION_URL}>
         <Story />
       </HduxProProvider>
     ),

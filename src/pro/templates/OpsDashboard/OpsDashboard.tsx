@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { HduxThemeProvider } from "../../../theme/ThemeProvider";
 import { TopBar, BottomBar, BarLeft, BarCenter, BarRight, BarElement, ThemeSelector } from "../../../components/Bar";
 import { Box } from "../../../components/Box";
@@ -9,6 +9,7 @@ import { DataGrid } from "../../components/DataGrid";
 import { ProGate } from "../../ProGate";
 import type { OpsDashboardProps } from "./types";
 import "./OpsDashboard.css";
+import "../responsive.css";
 
 const DEFAULT_METRICS = [
   { label: "CPU",  value: 68 },
@@ -71,36 +72,6 @@ const LOG_COLUMNS = [
 
 type LogRow = typeof DEFAULT_ROWS[number];
 
-function useTickingMetrics(initial: number[]) {
-  const [values, setValues] = useState(initial);
-  useEffect(() => {
-    const id = setInterval(() => {
-      setValues((prev) =>
-        prev.map((v) => Math.min(99, Math.max(3, Math.round(v + (Math.random() - 0.48) * 6))))
-      );
-    }, 1800);
-    return () => clearInterval(id);
-  }, []);
-  return values;
-}
-
-function useScrollingChart(seed: number[]) {
-  const [data, setData] = useState(seed);
-  const seedRef = useRef(seed);
-  seedRef.current = seed;
-  useEffect(() => {
-    const id = setInterval(() => {
-      setData((prev) => {
-        const last = prev[prev.length - 1] ?? 50;
-        const next = Math.min(99, Math.max(2, Math.round(last + (Math.random() - 0.46) * 12)));
-        return [...prev.slice(1), next];
-      });
-    }, 2000);
-    return () => clearInterval(id);
-  }, []);
-  return data;
-}
-
 function useClock() {
   const [time, setTime] = useState(() => new Date().toLocaleTimeString("en-GB"));
   useEffect(() => {
@@ -113,10 +84,12 @@ function useClock() {
 function OpsDashboardInner({
   title = "OPS DASHBOARD",
   systemName = "HDUX CONTROL",
-  metrics = DEFAULT_METRICS,
-  chartSeries = DEFAULT_SERIES,
+  demoMode = false,
+  metrics = demoMode ? DEFAULT_METRICS : [],
+  chartSeries = demoMode ? DEFAULT_SERIES : [],
   chartLabels = DEFAULT_LABELS,
-  tableRows = DEFAULT_ROWS,
+  tableRows = demoMode ? DEFAULT_ROWS : [],
+  serviceNodes = demoMode ? SERVICE_NODES : [],
   className,
   style,
 }: OpsDashboardProps) {
@@ -127,24 +100,10 @@ function OpsDashboardInner({
   }, []);
 
   const clock = useClock();
-  const liveMetricValues = useTickingMetrics(metrics.map((m) => m.value));
-
-  const cpuData0 = useScrollingChart(chartSeries[0]?.data ?? DEFAULT_SERIES[0].data);
-  const cpuData1 = useScrollingChart(chartSeries[1]?.data ?? DEFAULT_SERIES[1].data);
-  const liveChartData = [
-    { ...((chartSeries[0] ?? DEFAULT_SERIES[0])), data: cpuData0 },
-    { ...((chartSeries[1] ?? DEFAULT_SERIES[1])), data: cpuData1 },
-  ];
-
-  const errCount   = SERVICE_NODES.filter((n) => n.status === "err").length;
-  const warnCount  = SERVICE_NODES.filter((n) => n.status === "warn").length;
-  const statusText = errCount > 0 ? `${errCount} ERROR` : warnCount > 0 ? `${warnCount} WARN` : "OPERATIONAL";
+  const errCount   = serviceNodes.filter((n) => n.status === "err").length;
+  const warnCount  = serviceNodes.filter((n) => n.status === "warn").length;
+  const statusText = errCount > 0 ? `${errCount} ERROR` : warnCount > 0 ? `${warnCount} WARN` : serviceNodes.length ? "OPERATIONAL" : "NO SERVICE DATA";
   const statusColor = errCount > 0 ? "#ff1744" : warnCount > 0 ? "#ff6f00" : "#00e676";
-
-  const liveMetrics = metrics.map((m, i) => ({
-    ...m,
-    value: liveMetricValues[i] ?? m.value,
-  }));
 
   return (
     <HduxThemeProvider
@@ -192,7 +151,7 @@ function OpsDashboardInner({
             <Box animation="standard" hasLoaded={loaded} fullBorder>
               <GaugeCluster
                 title="SYSTEM VITALS"
-                gauges={liveMetrics.map((m) => ({
+                gauges={metrics.map((m) => ({
                   label: m.label,
                   value: m.value,
                   max: m.max ?? 100,
@@ -209,7 +168,7 @@ function OpsDashboardInner({
               <div className="hdux-ops-dashboard__nodes">
                 <Text variant="subheading">SERVICE MAP</Text>
                 <div className="hdux-ops-dashboard__node-grid">
-                  {SERVICE_NODES.map((node) => (
+                  {serviceNodes.map((node) => (
                     <div key={node.name} className="hdux-ops-dashboard__node">
                       <span
                         className="hdux-ops-dashboard__node-dot"
@@ -226,7 +185,7 @@ function OpsDashboardInner({
           {/* ── Main area ──────────────────────────────── */}
           <div className="hdux-ops-dashboard__main">
             <div className="hdux-ops-dashboard__charts">
-              {liveChartData.map((s, i) => (
+              {chartSeries.map((s, i) => (
                 <Box key={i} animation="horizontalFirst" hasLoaded={loaded} fullBorder>
                   <AreaChart
                     title={s.label}
