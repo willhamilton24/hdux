@@ -21,12 +21,12 @@ const STATUS_LABELS: Record<LobbyPlayer["status"], string> = {
 };
 
 const DEFAULT_PLAYERS: LobbyPlayer[] = [
-  { id: 1, name: "ACE_PILOT", status: "ready", team: "A", stat: "2841 MMR", isLocalPlayer: true },
-  { id: 2, name: "GHOST_0x7F", status: "ready", team: "A", stat: "2790 MMR" },
-  { id: 3, name: "UNIT_NULL", status: "not-ready", team: "A", stat: "2650 MMR" },
-  { id: 4, name: "SHADOW_KIT", status: "ready", team: "B", stat: "2900 MMR" },
-  { id: 5, name: "NEON_STRIKE", status: "loading", team: "B", stat: "2755 MMR" },
-  { id: 6, name: "VOID_ECHO", status: "ready", team: "B", stat: "2810 MMR" },
+  { id: 1, name: "ACE_PILOT",   status: "ready",     team: "A", stat: "2841 MMR", isLocalPlayer: true },
+  { id: 2, name: "GHOST_0x7F",  status: "ready",     team: "A", stat: "2790 MMR" },
+  { id: 3, name: "UNIT_NULL",   status: "not-ready", team: "A", stat: "2650 MMR" },
+  { id: 4, name: "SHADOW_KIT",  status: "ready",     team: "B", stat: "2900 MMR" },
+  { id: 5, name: "NEON_STRIKE", status: "loading",   team: "B", stat: "2755 MMR" },
+  { id: 6, name: "VOID_ECHO",   status: "ready",     team: "B", stat: "2810 MMR" },
 ];
 
 const DEFAULT_MATCH = {
@@ -36,7 +36,29 @@ const DEFAULT_MATCH = {
   countdown: 0,
 };
 
-function PlayerRow({ player }: { player: LobbyPlayer }) {
+function PingBars({ ms }: { ms: number }) {
+  const bars = 4;
+  const filled =
+    ms < 40 ? 4 : ms < 80 ? 3 : ms < 150 ? 2 : 1;
+  const color =
+    ms < 40 ? "#00e676" : ms < 80 ? "#00d4ff" : ms < 150 ? "#ff6f00" : "#ff1744";
+  return (
+    <span className="hdux-game-lobby__ping-bars" title={`${ms} ms`} aria-label={`${ms}ms ping`}>
+      {Array.from({ length: bars }, (_, i) => (
+        <span
+          key={i}
+          className="hdux-game-lobby__ping-bar"
+          style={{
+            background: i < filled ? color : undefined,
+            height: `${5 + i * 3}px`,
+          }}
+        />
+      ))}
+    </span>
+  );
+}
+
+function PlayerRow({ player, ping }: { player: LobbyPlayer; ping: number }) {
   const color = STATUS_COLORS[player.status];
   return (
     <div
@@ -55,11 +77,34 @@ function PlayerRow({ player }: { player: LobbyPlayer }) {
       {player.stat && (
         <span className="hdux-game-lobby__player-stat">{player.stat}</span>
       )}
+      <PingBars ms={ping} />
       <span className="hdux-game-lobby__player-status-label" style={{ color }}>
         {STATUS_LABELS[player.status]}
       </span>
     </div>
   );
+}
+
+function usePings(playerIds: Array<string | number>) {
+  const [pings, setPings] = useState<Record<string | number, number>>(() =>
+    Object.fromEntries(playerIds.map((id) => [id, Math.floor(Math.random() * 60) + 20]))
+  );
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setPings((prev) => {
+        const next = { ...prev };
+        for (const pid of playerIds) {
+          const base = prev[pid] ?? 40;
+          next[pid] = Math.max(8, Math.min(300, base + Math.round((Math.random() - 0.5) * 20)));
+        }
+        return next;
+      });
+    }, 3000);
+    return () => clearInterval(id);
+  }, [playerIds.join(",")]);
+
+  return pings;
 }
 
 function GameLobbyInner({
@@ -73,11 +118,16 @@ function GameLobbyInner({
   const [ready, setReady] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [countdown, setCountdown] = useState(matchInfo.countdown ?? 0);
+  const pings = usePings(players.map((p) => p.id));
 
   useEffect(() => {
     const id = setTimeout(() => setLoaded(true), 150);
     return () => clearTimeout(id);
   }, []);
+
+  useEffect(() => {
+    setCountdown(matchInfo.countdown ?? 0);
+  }, [matchInfo.countdown]);
 
   useEffect(() => {
     if (!countdown) return;
@@ -86,9 +136,13 @@ function GameLobbyInner({
   }, [countdown]);
 
   const readyCount = players.filter((p) => p.status === "ready").length;
+  const allReady = readyCount === players.length;
   const teamA = players.filter((p) => p.team === "A");
   const teamB = players.filter((p) => p.team === "B");
   const hasTeams = teamA.length > 0 && teamB.length > 0;
+
+  const countdownUrgent = countdown > 0 && countdown <= 10;
+  const countdownColor = allReady ? "#00e676" : countdownUrgent ? "#ff6f00" : color;
 
   function handleReadyToggle() {
     const next = !ready;
@@ -122,6 +176,11 @@ function GameLobbyInner({
             </BarElement>
           </BarLeft>
           <BarRight>
+            {allReady && countdown === 0 && (
+              <BarElement color="#00e676">
+                <Text variant="body" color="#00e676">ALL READY</Text>
+              </BarElement>
+            )}
             <BarElement>
               <Text variant="body">{matchInfo.map ?? ""}</Text>
             </BarElement>
@@ -132,17 +191,29 @@ function GameLobbyInner({
           {/* Match info */}
           <Box animation="horizontalFirst" hasLoaded={loaded} fullBorder>
             <div className="hdux-game-lobby__match-info">
-              <Text variant="h3" animation="print">{matchInfo.title ?? "MATCH LOBBY"}</Text>
+              <Text variant="h3" animation="print">
+                {countdown > 0 ? "MATCH STARTING" : (matchInfo.title ?? "MATCH LOBBY")}
+              </Text>
               <div className="hdux-game-lobby__match-details">
                 <Text variant="body">{matchInfo.mode}</Text>
                 <Text variant="body">{matchInfo.map}</Text>
               </div>
-              {countdown > 0 && (
-                <div className="hdux-game-lobby__countdown" style={{ color }}>
+              {countdown > 0 ? (
+                <div
+                  className={[
+                    "hdux-game-lobby__countdown",
+                    countdownUrgent ? "hdux-game-lobby__countdown--urgent" : "",
+                  ].filter(Boolean).join(" ")}
+                  style={{ color: countdownColor }}
+                >
                   {String(Math.floor(countdown / 60)).padStart(2, "0")}:
                   {String(countdown % 60).padStart(2, "0")}
                 </div>
-              )}
+              ) : allReady ? (
+                <div className="hdux-game-lobby__all-ready" style={{ color: "#00e676" }}>
+                  ALL PLAYERS READY
+                </div>
+              ) : null}
             </div>
           </Box>
 
@@ -153,16 +224,16 @@ function GameLobbyInner({
                 <>
                   <div className="hdux-game-lobby__team">
                     <Text variant="subheading">TEAM ALPHA</Text>
-                    {teamA.map((p) => <PlayerRow key={p.id} player={p} />)}
+                    {teamA.map((p) => <PlayerRow key={p.id} player={p} ping={pings[p.id] ?? 40} />)}
                   </div>
                   <div className="hdux-game-lobby__team-divider" style={{ borderColor: color }} />
                   <div className="hdux-game-lobby__team">
                     <Text variant="subheading">TEAM BRAVO</Text>
-                    {teamB.map((p) => <PlayerRow key={p.id} player={p} />)}
+                    {teamB.map((p) => <PlayerRow key={p.id} player={p} ping={pings[p.id] ?? 40} />)}
                   </div>
                 </>
               ) : (
-                players.map((p) => <PlayerRow key={p.id} player={p} />)
+                players.map((p) => <PlayerRow key={p.id} player={p} ping={pings[p.id] ?? 40} />)
               )}
             </div>
           </Box>
@@ -174,7 +245,7 @@ function GameLobbyInner({
                 label="PLAYERS READY"
                 value={readyCount}
                 max={players.length}
-                color={readyCount === players.length ? "#00e676" : color}
+                color={allReady ? "#00e676" : color}
                 showValue
                 height={8}
               />
@@ -196,7 +267,9 @@ function GameLobbyInner({
           </BarLeft>
           <BarRight>
             <BarElement>
-              <Text variant="body">{readyCount}/{players.length} READY</Text>
+              <Text variant="body" color={allReady ? "#00e676" : undefined}>
+                {readyCount}/{players.length} READY
+              </Text>
             </BarElement>
           </BarRight>
         </BottomBar>

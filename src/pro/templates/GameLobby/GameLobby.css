@@ -110,3 +110,44 @@
   gap: 16px;
   align-items: flex-start;
 }
+
+/* Ping bars */
+.hdux-game-lobby__ping-bars {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.hdux-game-lobby__ping-bar {
+  width: 3px;
+  border-radius: 1px;
+  background: color-mix(in srgb, var(--hdux-color-main, #00d4ff) 20%, transparent);
+  transition: background 0.4s;
+}
+
+/* Countdown urgency pulse */
+.hdux-game-lobby__countdown--urgent {
+  animation: hdux-lobby-countdown-pulse 0.8s ease-in-out infinite;
+}
+
+@keyframes hdux-lobby-countdown-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.55; }
+}
+
+/* All-ready indicator */
+.hdux-game-lobby__all-ready {
+  font-family: var(--hdux-font-main, monospace);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  margin-top: 8px;
+  animation: hdux-lobby-ready-in 0.4s ease-out;
+}
+
+@keyframes hdux-lobby-ready-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
