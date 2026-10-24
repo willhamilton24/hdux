@@ -15,6 +15,16 @@ export default defineConfig({
   test: {
     projects: [
       {
+        test: {
+          name: 'templates',
+          include: ['tests/**/*.test.tsx'],
+          browser: {
+            enabled: true, headless: true, provider: playwright({}),
+            instances: [{ browser: 'chromium' }],
+          },
+        },
+      },
+      {
         extends: true,
         plugins: [
           // The plugin will run tests for the stories defined in your Storybook config

@@ -287,9 +287,9 @@ function App() {
 
 | Template | Description |
 |----------|-------------|
-| `OpsDashboard` | Full-page operational dashboard (gauges + charts + service map + event log) |
-| `GameLobby` | Game lobby with team view, MMR display, ping, ready state, and countdown |
-| `LandingPage` | Hero marketing page — animated showcase with live component demos and Pro CTA |
+| `OpsDashboard` | Full-page operational dashboard (live demo gauges + charts + service map + event log with alert indicator) |
+| `GameLobby` | Game lobby with team view, MMR display, measured ping bars, ready state, and countdown |
+| `LandingPage` | Full marketing page — live component showcases, customizable branding, pricing, and shared Pro checkout |
 
 ### Purchasing a License
 

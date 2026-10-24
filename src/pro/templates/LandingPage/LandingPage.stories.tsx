@@ -1,5 +1,6 @@
 import { expect, waitFor, userEvent, within, fn } from "storybook/test";
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { licensed, unlicensed } from "../../../../.storybook/licenseFixtures";
 import { HduxProProvider } from "../../ProProvider";
 import { LandingPage } from "./LandingPage";
 
@@ -13,7 +14,7 @@ const meta: Meta<typeof LandingPage> = {
     await waitFor(() => expect(canvasElement.querySelector(".hdux-pro-gate")).toBeNull());
     await expect(canvasElement.querySelector(".hdux-landing")).not.toBeNull();
     const buttons = (await within(canvasElement).findAllByRole("button")).filter(button =>
-      button.classList.contains("hdux-btn"));
+      button.classList.contains("hdux-landing__buy-btn"));
     await userEvent.click(buttons[0]);
     await expect(canvasElement.querySelector('[role="alert"]')).toBeNull();
   },
@@ -77,5 +78,23 @@ export const GreenAccent: Story = {
     tagline: "Operational intelligence for critical infrastructure.",
     brandName: "ARCLIGHT",
     ctaLabel: "ACCESS CONSOLE →",
+  },
+};
+
+export const CustomBranding: Story = {
+  name: "Custom Branding",
+  decorators: [licensed],
+  args: {
+    productName: "NEXUS",
+    tagline: "THE CONTROL INTERFACE FOR MODERN OPS",
+    subTagline: "Drop-in HUD components built for operational dashboards, game UIs, and mission-critical tools.",
+  },
+};
+
+export const LightMode: Story = {
+  name: "Without Pro License (Gated Preview)",
+  decorators: [unlicensed],
+  play: async ({ canvasElement }) => {
+    await expect(canvasElement.querySelectorAll(".hdux-pro-gate")).toHaveLength(3);
   },
 };
