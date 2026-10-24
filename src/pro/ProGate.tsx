@@ -1,6 +1,7 @@
 import { type ReactNode } from "react";
 import { useProLicense } from "./ProContext";
 import "./ProGate.css";
+import { SupportFunding } from "./SupportFunding";
 
 interface ProGateProps {
   componentName: string;
@@ -42,14 +43,19 @@ export function ProGate({ componentName, children }: ProGateProps) {
 
   return (
     <div className="hdux-pro-gate" aria-label={`${componentName} — Pro license required`}>
-      <div className="hdux-pro-gate__preview" aria-hidden="true">
+      <div className="hdux-pro-gate__preview" aria-hidden="true" {...{ inert: "" }}>
         {children}
       </div>
       <div className="hdux-pro-gate__overlay">
         <div className="hdux-pro-gate__badge">
           <span className="hdux-pro-gate__title">{message}</span>
           {sub && <span className="hdux-pro-gate__sub">{sub}</span>}
-          {status !== "validating" && <BuyButton />}
+          {status !== "validating" && (
+            <div className="hdux-pro-gate__buttons">
+              <BuyButton />
+              <SupportFunding />
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -11,6 +11,7 @@ import { Button } from "../../../components/Button";
 import { StatBar } from "../../../components/StatBar";
 import { RadialMeter } from "../../../components/RadialMeter";
 import { AreaChart } from "../../components/AreaChart";
+import { SupportFunding } from "../../SupportFunding";
 import { GaugeCluster } from "../../components/GaugeCluster";
 import { DataGrid } from "../../components/DataGrid";
 import type { LandingPageProps } from "./types";
@@ -592,6 +593,8 @@ export function LandingPage({
             </Box>
           </div>
         </section>
+
+        <SupportFunding />
 
         {/* ── Footer ───────────────────────────────────────────────── */}
         <BottomBar static>

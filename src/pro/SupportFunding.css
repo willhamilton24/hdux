@@ -1,0 +1,12 @@
+.hdux-support {
+  color: var(--hdux-text-color, #e0e0e0);
+  box-sizing: border-box;
+  max-width: 100%;
+  padding: 12px;
+  text-align: center;
+  font: 0.75rem/1.5 var(--hdux-font-main, monospace);
+  overflow-wrap: anywhere;
+}
+.hdux-support p { margin: 0 0 6px; }
+.hdux-support a { color: var(--hdux-color-main, #00d4ff); text-decoration: underline; }
+.hdux-support a:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }

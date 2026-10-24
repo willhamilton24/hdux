@@ -70,3 +70,23 @@
   opacity: 0.5;
   cursor: default;
 }
+
+.hdux-pro-gate__buttons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.hdux-pro-gate__badge {
+  box-sizing: border-box;
+  max-width: 100%;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+.hdux-pro-gate__buy:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}
+/* The overlay has its own dark background, even outside a theme provider. */
+.hdux-pro-gate__badge .hdux-support { color: #e0e0e0; }

@@ -8,6 +8,8 @@ export interface HduxProProviderProps {
    * Obtain one through the host application’s configured checkout.
    */
   licenseKey: string;
+  /** Company Stripe test Payment Link, separate from the Pro product. */
+  supportPaymentLink?: string;
   /**
    * Override the validation endpoint (useful for self-hosted deployments).
    * Supply the endpoint derived from the host application’s SERVICE_URL.
@@ -25,6 +27,7 @@ export interface HduxProProviderProps {
 export function HduxProProvider({
   licenseKey,
   validationUrl,
+  supportPaymentLink,
   checkoutUrl,
   children,
 }: HduxProProviderProps) {
@@ -45,7 +48,7 @@ export function HduxProProvider({
   }, [licenseKey, validationUrl]);
 
   return (
-    <HduxProContext.Provider value={{ status, licenseKey, checkoutUrl }}>
+    <HduxProContext.Provider value={{ status, licenseKey, supportPaymentLink, checkoutUrl }}>
       {children}
     </HduxProContext.Provider>
   );
