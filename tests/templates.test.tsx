@@ -128,3 +128,59 @@ test('production license validation still fails closed when unavailable or rejec
   fetchSpy.mockResolvedValueOnce(new Response('{}', { status: 403 }));
   expect((await validateLicense(PRO_KEY, VALIDATION_URL)).valid).toBe(false);
 });
+
+// Test-only placeholder: never navigate to Stripe during local verification.
+const supportLink = 'https://buy.stripe.com/test_localFixture';
+for (const width of [320, 1280]) {
+  for (const licensed of [false, true]) {
+    test(`optional support, checkout isolation and keyboard layout: ${width}px, licensed=${licensed}`, async () => {
+      await page.viewport(width, 900);
+      const checkout = vi.fn();
+      const draw = async (link?: string) => {
+        await act(async () => root.render(
+          <HduxProProvider licenseKey={licensed ? PRO_KEY : ''} validationUrl={VALIDATION_URL} supportPaymentLink={link}>
+            <LandingPage onCtaClick={checkout} />
+          </HduxProProvider>
+        ));
+        if (licensed) await vi.waitFor(() => expect(host.querySelector('.hdux-pro-gate')).toBeNull());
+      };
+      for (const invalid of [undefined, '', 'https://buy.stripe.com/liveExample', 'https://example.com/test_bad', 'javascript:alert(1)', `${supportLink}?prefilled_email=a`]) {
+        await draw(invalid);
+        expect(host.querySelector('.hdux-support')).toBeNull();
+      }
+      await draw(supportLink);
+      await new Promise(resolve => setTimeout(resolve, 900));
+      const support = Array.from(host.querySelectorAll<HTMLElement>('.hdux-support')).find(el => !el.closest('[inert]'))!;
+      expect(support.textContent).toContain('Does not grant a Pro license');
+      const link = support.querySelector('a')!;
+      expect(link.href).toBe(supportLink);
+      const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('{}'));
+      const activated = vi.fn((event: Event) => event.preventDefault());
+      link.addEventListener('click', activated);
+      const { userEvent } = await import('vitest/browser');
+      // Reach the link with real Tab input, including skipping the inert preview.
+      (document.activeElement as HTMLElement)?.blur();
+      for (let i = 0; i < 20 && document.activeElement !== link; i++) await userEvent.keyboard('{Tab}');
+      expect(document.activeElement).toBe(link);
+      expect(getComputedStyle(link).outlineStyle).not.toBe('none');
+      await userEvent.keyboard('{Enter}');
+      expect(activated).toHaveBeenCalledTimes(1);
+      expect(checkout).not.toHaveBeenCalled();
+      expect(fetchSpy).not.toHaveBeenCalled();
+      expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
+      if (!licensed) expect(getComputedStyle(support).color).toBe("rgb(224, 224, 224)");
+      const rect = support.getBoundingClientRect();
+      expect(rect.left).toBeGreaterThanOrEqual(0);
+      expect(rect.right).toBeLessThanOrEqual(width + 1);
+      if (licensed) {
+        await act(async () => Array.from(host.querySelectorAll('button')).find(b => b.textContent?.includes('GET HDUX'))!.click());
+        expect(checkout).toHaveBeenCalledTimes(1);
+      } else {
+        await act(async () => host.querySelector<HTMLButtonElement>('.hdux-pro-gate__buy')!.click());
+        expect(fetchSpy).toHaveBeenCalledWith('https://api.hdux.dev/v1/checkout/session', expect.objectContaining({ method: 'POST' }));
+      }
+      await draw();
+      expect(host.querySelector('.hdux-support')).toBeNull();
+    });
+  }
+}

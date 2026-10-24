@@ -304,12 +304,11 @@ Wrap your app (or any subtree) in `<HduxProProvider licenseKey="…">`. The key 
 MIT
 
 ## 💰 Path to Revenue
-Open-core npm library: free base components drive adoption, paid "pro" pack (data-viz HUD widgets, dashboards, game-UI templates) sold with license keys. Secondary revenue through GitHub Sponsors and Polar supports ongoing development.
+Open-core npm library: free base components drive adoption, paid "pro" pack (data-viz HUD widgets, dashboards, game-UI templates) sold with license keys. Optional voluntary support uses a company-owned Stripe test Payment Link, separate from Pro checkout and licensing.
 
 ### Funding
 - **Primary:** HDUX Pro — one-time license for advanced widgets and templates
-- **Secondary:** [GitHub Sponsors](https://github.com/sponsors/hamiltondynamic) — recurring support from the community
-- **Secondary:** [Polar](https://polar.sh/hamiltondynamic) — sustainable open-source funding platform
+- **Secondary:** Optional Stripe test-mode support (configuration below); no Pro license is granted.
 
 ### Release TODOs
 - [x] Publish v0.1 to npm and deploy the Storybook (GitHub Action already exists) as a public docs/demo site
@@ -320,7 +319,7 @@ Open-core npm library: free base components drive adoption, paid "pro" pack (dat
 - [x] Add a "Buy HDUX Pro" checkout path (Stripe Checkout session against the provisioned price) linked from README and the Pro gate overlay, delivering the license key by email
 - [ ] Run a Stripe test-mode E2E check: checkout → webhook → key issued → `validateLicense` accepts the key and rejects a revoked one
 - [x] Build 2-3 polished full-page demo templates (ops dashboard, game lobby, landing page) as the visual sales pitch
-- [x] Add GitHub Sponsors/Polar funding links as a secondary revenue channel
+- [x] Add optional, explicitly configured Stripe test Payment Link support; hide it without configuration and distinguish it from Pro licensing
 - [ ] Launch posts with animation GIFs on r/reactjs, Hacker News, and X; submit to component-library directories (waits on the deployment switch)
 - [ ] Archive HDUI-Prototype with a pointer here so traffic consolidates on one repo (migration docs drafted; archiving the public repo and pointing its traffic here waits on the deployment switch)
 
@@ -374,3 +373,52 @@ integration (using its environment-backed service URL), validate HTTP status and
 response before redirecting, and reject on failure. The template awaits that
 callback, prevents duplicate submissions, and displays accessible failure feedback.
 It has no built-in checkout endpoint.
+
+
+### Optional Stripe support (test mode only)
+
+Set the host application's `NEXT_PUBLIC_STRIPE_SUPPORT_PAYMENT_LINK` to a test-mode
+Payment Link from the existing company Stripe account, then pass it explicitly:
+
+```tsx
+<HduxProProvider
+  licenseKey={licenseKey}
+  supportPaymentLink={process.env.NEXT_PUBLIC_STRIPE_SUPPORT_PAYMENT_LINK}
+>
+  <App />
+</HduxProProvider>
+```
+
+The library does not read environment variables itself. Without this prop (or with
+an invalid or live-mode URL), the entire support section is absent from ProGate
+and LandingPage. Only `https://buy.stripe.com/test_…` links without query parameters
+are accepted. No destination is bundled by default.
+
+Configure the company's test Payment Link with a **separate support product and
+price**, never the Pro price, and session metadata `product=hdux-support`.
+Use Stripe's hosted thank-you confirmation, not the license success route.
+The webhook ignores support-marked sessions and otherwise still requires the Pro
+price to issue a license. Support opens the configured Payment Link directly;
+it never calls Pro checkout, changes license status, or grants a Pro license.
+Existing ProGate purchase and LandingPage `onCtaClick` behavior is unchanged.
+
+No Payment Link was created or published by this change. The operator must supply
+company-owned test configuration before support appears. No new endpoint, secret,
+or deployment is required by this integration; deployment remains off.
+
+
+Support review verification (2026-10-24):
+
+- [x] Root `npm run typecheck` and `npm run build`; license-service `npm run build`.
+- [x] Browser suite: `npx vitest run --config vitest.templates.config.ts` (10 tests),
+  including absent/invalid/present support configuration, removal on configuration
+  change, independent Pro actions, and keyboard Tab/Enter with visible focus.
+- [x] Desktop (1280px) and narrow mobile (320px) support layout bounds and screenshot review.
+- [x] License-service `npx vitest run src/support.test.ts` and strict test typecheck:
+  support does not issue keys or emails; Pro checkout still uses the existing price
+  and paid Pro webhook events still issue licenses (Stripe/database mocked locally).
+- [ ] Operator-supplied company Stripe test Payment Link and completed test payment:
+  not performed in this review; support remains hidden without configuration.
+
+`render.yaml` already exists and requires no change for this host-provided optional
+Payment Link. No deployment, publication, public webhook, or account creation was performed.

@@ -8,6 +8,8 @@ export interface HduxProProviderProps {
    * Obtain one at https://hdux.dev/pro
    */
   licenseKey: string;
+  /** Company Stripe test Payment Link, separate from the Pro product. */
+  supportPaymentLink?: string;
   /**
    * Override the validation endpoint (useful for self-hosted deployments).
    * Defaults to `https://api.hdux.dev/v1/license/validate`.
@@ -23,6 +25,7 @@ export interface HduxProProviderProps {
 export function HduxProProvider({
   licenseKey,
   validationUrl,
+  supportPaymentLink,
   children,
 }: HduxProProviderProps) {
   const [status, setStatus] = useState<ProLicenseStatus>(
@@ -42,7 +45,7 @@ export function HduxProProvider({
   }, [licenseKey, validationUrl]);
 
   return (
-    <HduxProContext.Provider value={{ status, licenseKey }}>
+    <HduxProContext.Provider value={{ status, licenseKey, supportPaymentLink }}>
       {children}
     </HduxProContext.Provider>
   );

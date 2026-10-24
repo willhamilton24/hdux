@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { useProLicense } from "./ProContext";
 import "./ProGate.css";
+import { SupportFunding } from "./SupportFunding";
 
 interface ProGateProps {
   componentName: string;
@@ -44,16 +45,7 @@ function BuyButton() {
       >
         {loading ? "LOADING…" : "BUY HDUX PRO →"}
       </button>
-      <div className="hdux-pro-gate__funding">
-        <p className="hdux-pro-gate__funding-text">Or support development:</p>
-        <a href="https://github.com/sponsors/hamiltondynamic" target="_blank" rel="noopener noreferrer" className="hdux-pro-gate__funding-link">
-          GitHub Sponsors
-        </a>
-        <span className="hdux-pro-gate__funding-sep">·</span>
-        <a href="https://polar.sh/hamiltondynamic" target="_blank" rel="noopener noreferrer" className="hdux-pro-gate__funding-link">
-          Polar
-        </a>
-      </div>
+      <SupportFunding />
     </div>
   );
 }
@@ -81,7 +73,7 @@ export function ProGate({ componentName, children }: ProGateProps) {
 
   return (
     <div className="hdux-pro-gate" aria-label={`${componentName} — Pro license required`}>
-      <div className="hdux-pro-gate__preview" aria-hidden="true">
+      <div className="hdux-pro-gate__preview" aria-hidden="true" {...{ inert: "" }}>
         {children}
       </div>
       <div className="hdux-pro-gate__overlay">

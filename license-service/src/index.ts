@@ -39,7 +39,7 @@ app.post(
         const session = event.data.object as Stripe.Checkout.Session;
 
         // Only issue keys for paid sessions on the HDUX Pro price
-        if (session.payment_status === 'paid') {
+        if (session.payment_status === 'paid' && session.metadata?.product !== 'hdux-support') {
           const lineItems = await stripe.checkout.sessions.listLineItems(session.id, { limit: 5 });
           const hasPro = lineItems.data.some((item) => item.price?.id === STRIPE_PRICE_ID);
 
