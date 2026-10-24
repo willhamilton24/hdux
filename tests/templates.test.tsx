@@ -128,3 +128,17 @@ test('production license validation still fails closed when unavailable or rejec
   fetchSpy.mockResolvedValueOnce(new Response('{}', { status: 403 }));
   expect((await validateLicense(PRO_KEY, VALIDATION_URL)).valid).toBe(false);
 });
+
+test('Pro gate uses configured browser navigation and omits unconfigured or unsafe links', async () => {
+  for (const checkoutUrl of [undefined, 'javascript:alert(1)', 'http://127.0.0.1:10000/v1/checkout/session']) {
+    await act(async () => root.render(
+      <HduxProProvider licenseKey="" checkoutUrl={checkoutUrl}>
+        <OpsDashboard />
+      </HduxProProvider>
+    ));
+    const link = host.querySelector<HTMLAnchorElement>('a.hdux-pro-gate__buy');
+    if (checkoutUrl?.startsWith('http:')) expect(link?.href).toBe(checkoutUrl);
+    else expect(link).toBeNull();
+  }
+  expect((await validateLicense(PRO_KEY)).valid).toBe(false);
+});

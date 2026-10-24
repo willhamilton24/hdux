@@ -5,6 +5,7 @@ export type ProLicenseStatus = "validating" | "valid" | "invalid" | "no-key";
 export interface HduxProContextValue {
   status: ProLicenseStatus;
   licenseKey: string | undefined;
+  checkoutUrl?: string;
 }
 
 export const HduxProContext = createContext<HduxProContextValue>({

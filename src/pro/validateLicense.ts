@@ -9,12 +9,13 @@ export function validateLicenseFormat(key: string): boolean {
 
 /**
  * Validates a license key against the HDUX license service.
- * Falls back to a format check if the service is unreachable.
+ * Fails closed when configuration is missing or the service is unreachable.
  */
 export async function validateLicense(
   key: string,
-  validationUrl = "https://api.hdux.dev/v1/license/validate"
+  validationUrl?: string
 ): Promise<ValidationResult> {
+  if (!validationUrl) return { valid: false, reason: "License service is not configured" };
   const normalized = key.toUpperCase().trim();
   if (!validateLicenseFormat(normalized)) {
     return { valid: false, reason: "Invalid key format" };
