@@ -8,7 +8,8 @@
     "start": "node dist/index.js",
     "dev": "ts-node-dev --respawn src/index.ts",
     "test": "vitest run --config vitest.config.ts src/checkout.test.ts",
-    "test:e2e": "vitest run --config vitest.config.ts src/e2e.test.ts"
+    "test:e2e": "vitest run --config vitest.config.ts src/e2e.test.ts",
+    "test:e2e:platform": "node scripts/test-e2e-platform.mjs"
   },
   "dependencies": {
     "express": "^4.18.2",

@@ -373,6 +373,27 @@ schema with no public search-path fallback for both the service and test pools, 
 drops it (including all test rows) on exit. It never uses `DATABASE_URL` as a fallback.
 Missing configuration fails with `BLOCKED`, rather than passing a skipped test.
 
+On the THRONE operator machine, the already provisioned credentials can be loaded
+without copying secrets into the shell or repository:
+
+```sh
+cd license-service
+npm run test:e2e:platform
+```
+
+This helper uses THRONE's repo-aware `secretsFor('hdux')` and the existing HDUX
+pending environment. It defaults to the platform module at
+`~/Desktop/Workspace/throne/dist/platform.js`; set `THRONE_PLATFORM_MODULE` to its
+absolute path if THRONE is installed elsewhere. It requires the stored test key
+and database URL and passes only the required provider credentials to the test
+process. It does not provision or deploy anything.
+
+When the harness prints the private `checkout-url.txt` path, open the URL in that
+file in the browser (on macOS: `open "$(cat <printed-path>)"`) and complete the
+sandbox checkout within 180 seconds. Only the operator enters test payment
+details. After a successful run, add the sanitized success record described below
+and check the E2E Release TODO; a timeout is not success.
+
 The harness calls the application's POST checkout route with loopback redirects and
 writes the hosted test Checkout URL to a temporary private file. An operator must
 complete that test checkout within 180 seconds; no agent enters payment details.
@@ -390,7 +411,22 @@ include the revision, command, UTC timestamp, test result, and the harness's fin
 correlation summary, with no credentials, Checkout URLs, customer details, or license
 keys. Public deployment/delivery verification remains disabled by project policy.
 
-Review-fix checks (2026-10-22): root build/typecheck, license-service build, and\nstandalone strict typechecking of the E2E test passed. Missing-config and non-test\ncredential probes failed explicitly as intended. The normal E2E command was\nBLOCKED by missing local configuration; checkout, database isolation and key\nissuance have not been verified against the provisioned services in this run.\nA failed database-connection probe also exited promptly without a server-close hang.\nEOF
+Private verification attempt (2026-10-24, started 08:44:18 UTC), revision
+`f2041c2fe7a7ca68af9eb59205a755ce33682db3`: ran `npm run test:e2e` using the
+existing THRONE test credentials supplied in memory. Neon schema creation and
+service migrations succeeded; the app created a real HDUX Pro test Checkout
+session. Stripe confirmed it was open, unpaid, and non-live. Browser inspection
+confirmed the sandbox checkout loaded, priced at USD 49, but required payment
+details and offered no built-in completion action without them. The operator's
+no-agent-payment-details restriction prevented completion. Result: **BLOCKED**
+after the 180-second checkout window (183.19-second test duration), with no
+cleanup errors. No paid completion event, issued key, or validator/revocation
+correlation was observed; the Release TODO remains unchecked. No public endpoint,
+deployment, or webhook registration was created.
+
+The platform launcher passed a credential-presence/command/directory smoke check
+without printing credential values; a missing platform module failed explicitly.
+All 19 checkout tests and the license-service TypeScript build passed.
 
 ### Template review checks
 
