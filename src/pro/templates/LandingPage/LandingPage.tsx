@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { HduxThemeProvider } from "../../../theme/ThemeProvider";
 import {
   TopBar, BottomBar,
@@ -16,6 +16,7 @@ import { DataGrid } from "../../components/DataGrid";
 import type { LandingPageProps } from "./types";
 import "../templates.css";
 import "./LandingPage.css";
+import "../responsive.css";
 
 // Only absolute HTTP(S) destinations are accepted, including loopback development services.
 function safeUrl(value: unknown): string | undefined {
@@ -121,25 +122,27 @@ const DOCS_COLUMNS = [
   { key: "since" as const, header: "SINCE", width: 60 },
 ];
 
-function BuyButton({ proUrl, serviceUrl }: Pick<LandingPageProps, "proUrl" | "serviceUrl">) {
+function useCheckout({ proUrl, serviceUrl, onCtaClick }: Pick<LandingPageProps, "proUrl" | "serviceUrl" | "onCtaClick">) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const messageId = useId();
+  const pendingRef = useRef(false);
   const destination = safeUrl(proUrl);
   const service = safeUrl(serviceUrl);
-  const unavailable = proUrl !== undefined
+  const unavailable = onCtaClick ? "" : proUrl !== undefined
     ? (!destination ? "Checkout unavailable: configure a valid HTTP(S) Pro destination." : "")
     : (!service ? "Checkout unavailable: the app must configure a service URL." : "");
 
   const handleBuy = async () => {
-    if (loading || unavailable) return;
+    if (pendingRef.current || unavailable) return;
     setError("");
-    if (destination) {
+    if (destination && !onCtaClick) {
       window.location.assign(destination);
       return;
     }
+    pendingRef.current = true;
     setLoading(true);
     try {
+      if (onCtaClick) { await onCtaClick(); return; }
       // Reuse the existing Stripe license-service checkout route.
       const res = await fetch(`${service!.replace(/\/$/, "")}/v1/checkout/session`, {
         method: "POST",
@@ -158,12 +161,20 @@ function BuyButton({ proUrl, serviceUrl }: Pick<LandingPageProps, "proUrl" | "se
       if (!redirect) throw new Error("Checkout returned an unsafe or invalid URL. Please retry.");
       window.location.assign(redirect);
     } catch (cause) {
-      setError(cause instanceof Error && cause.message.startsWith("Checkout")
+      setError(onCtaClick ? "Unable to start checkout. Please try again." : cause instanceof Error && cause.message.startsWith("Checkout")
         ? cause.message : "Unable to connect to checkout. Please retry.");
     } finally {
+      pendingRef.current = false;
       setLoading(false);
     }
   };
+
+  return { loading, error, unavailable, handleBuy };
+}
+
+function BuyButton({ checkout, label }: { checkout: ReturnType<typeof useCheckout>; label: string }) {
+  const { loading, error, unavailable, handleBuy } = checkout;
+  const messageId = useId();
 
   return (
     <div className="hdux-landing__checkout">
@@ -174,7 +185,7 @@ function BuyButton({ proUrl, serviceUrl }: Pick<LandingPageProps, "proUrl" | "se
         aria-describedby={messageId}
         aria-busy={loading}
       >
-        {loading ? "LOADING…" : error ? "RETRY CHECKOUT →" : "BUY HDUX PRO →"}
+        {loading ? "LOADING…" : error ? "RETRY CHECKOUT →" : label}
       </button>
       <span id={messageId} role={error ? "alert" : "status"} className="hdux-landing__checkout-message">
         {error || unavailable}
@@ -185,6 +196,13 @@ function BuyButton({ proUrl, serviceUrl }: Pick<LandingPageProps, "proUrl" | "se
 
 export function LandingPage({
   productName = "HDUX",
+  headline,
+  brandName,
+  ctaLabel = "BUY HDUX PRO →",
+  onCtaClick,
+  features,
+  stats,
+  color = "#00d4ff",
   tagline = "THE HUD FRAMEWORK FOR REACT",
   subTagline = "Sci-fi HUD components for dashboards, games, and tools. Free base library — Pro tier unlocks charts, grids, and full-page templates.",
   freeUrl,
@@ -193,6 +211,7 @@ export function LandingPage({
   className,
   style,
 }: LandingPageProps) {
+  const checkout = useCheckout({ proUrl, serviceUrl, onCtaClick });
   const [heroLoaded, setHeroLoaded] = useState(false);
   const [featuresLoaded, setFeaturesLoaded] = useState(false);
   const [proLoaded, setProLoaded] = useState(false);
@@ -223,7 +242,7 @@ export function LandingPage({
       config={{
         defaultMode: "dark",
         master: {
-          mainColor: "#00d4ff",
+          mainColor: color,
           textColor: "#e0e0e0",
           background: "#06080f",
           customColors: { success: "#00e676", failure: "#ff1744", caution: "#ff6f00" },
@@ -232,7 +251,7 @@ export function LandingPage({
           boxCorners: { length: "16px", width: "2px" },
         },
         light:  { mainColor: "#0a3a5c", background: "#f4f6f8", textColor: "#0a0a0a", customColors: { success: "#08783c", caution: "#a04400", failure: "#c91636" } },
-        dark:   { mainColor: "#00d4ff", background: "#06080f", textColor: "#e0e0e0" },
+        dark:   { mainColor: color, background: "#06080f", textColor: "#e0e0e0" },
         custom: { mainColor: "#ad85ff", background: "#08030f", textColor: "#e0d4ff" },
         transitionDuration: "350ms",
       }}
@@ -245,7 +264,7 @@ export function LandingPage({
         <TopBar static>
           <BarLeft>
             <BarElement>
-              <Text variant="body">{productName}</Text>
+              <Text variant="body">{brandName ?? productName}</Text>
             </BarElement>
           </BarLeft>
           <BarCenter>
@@ -258,7 +277,7 @@ export function LandingPage({
               <ThemeSelector size={26} />
             </BarElement>
             <BarElement>
-              <BuyButton proUrl={proUrl} serviceUrl={serviceUrl} />
+              <BuyButton checkout={checkout} label={ctaLabel} />
             </BarElement>
           </BarRight>
         </TopBar>
@@ -269,7 +288,7 @@ export function LandingPage({
             <Box animation="standard" hasLoaded={heroLoaded} fullBorder>
               <div className="hdux-landing__hero-box">
                 <div className="hdux-landing__hero-label">HAMILTON DYNAMIC</div>
-                <div className="hdux-landing__hero-title">{productName}</div>
+                <div className="hdux-landing__hero-title">{headline ?? productName}</div>
                 <div className="hdux-landing__hero-tagline">{tagline}</div>
                 <Text variant="body" animation="sweep">
                   {subTagline}
@@ -282,10 +301,16 @@ export function LandingPage({
                     GET HDUX FREE
                   </Button>
                   {!safeUrl(freeUrl) && <span role="status">Free download unavailable: configure a valid HTTP(S) destination.</span>}
-                  <BuyButton proUrl={proUrl} serviceUrl={serviceUrl} />
+                  <BuyButton checkout={checkout} label={ctaLabel} />
                 </div>
 
                 <div className="hdux-landing__hero-stats">
+                  {stats ? stats.map((stat) => (
+                    <div className="hdux-landing__stat" key={stat.label}>
+                      <span className="hdux-landing__stat-value">{stat.value}</span>
+                      <span className="hdux-landing__stat-label">{stat.label}</span>
+                    </div>
+                  )) : <>
                   <div className="hdux-landing__stat">
                     <span className="hdux-landing__stat-value">{statVal}</span>
                     <span className="hdux-landing__stat-label">COMPONENTS</span>
@@ -302,11 +327,26 @@ export function LandingPage({
                     <span className="hdux-landing__stat-value">R18</span>
                     <span className="hdux-landing__stat-label">REACT 18+</span>
                   </div>
+                  </>}
                 </div>
               </div>
             </Box>
           </div>
         </section>
+
+        {features && (
+          <section className="hdux-landing__section hdux-landing__features">
+            {features.map((feature) => (
+              <Box key={feature.label} animation="standard" hasLoaded={featuresLoaded} fullBorder className="hdux-landing__feature-box">
+                <div className="hdux-landing__component-card">
+                  {feature.stat && <span className="hdux-landing__tag">{feature.stat}</span>}
+                  <Text variant="h5">{feature.label}</Text>
+                  <Text variant="body">{feature.description}</Text>
+                </div>
+              </Box>
+            ))}
+          </section>
+        )}
 
         {/* ── Free Components Showcase ────────────────────────────── */}
         <section className="hdux-landing__section">
@@ -392,7 +432,7 @@ export function LandingPage({
               <span className="hdux-landing__section-title">HDUX PRO</span>
               <span className="hdux-landing__pro-badge">UNLOCK ALL</span>
             </div>
-            <BuyButton proUrl={proUrl} serviceUrl={serviceUrl} />
+            <BuyButton checkout={checkout} label={ctaLabel} />
           </div>
 
           {/* Full-width area chart */}
@@ -546,7 +586,7 @@ export function LandingPage({
                   {PRO_FEATURES.map((f) => <li key={f} className="pro">{f}</li>)}
                 </ul>
                 <div className="hdux-landing__pricing-cta">
-                  <BuyButton proUrl={proUrl} serviceUrl={serviceUrl} />
+                  <BuyButton checkout={checkout} label={ctaLabel} />
                 </div>
               </div>
             </Box>

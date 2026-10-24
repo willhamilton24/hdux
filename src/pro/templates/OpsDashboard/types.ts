@@ -19,7 +19,16 @@ export interface OpsTableRow {
   [key: string]: unknown;
 }
 
+export interface OpsServiceNode {
+  name: string;
+  status: "ok" | "warn" | "err";
+}
+
 export interface OpsDashboardProps {
+  /** Show sample data for omitted props. Supplied data always takes precedence. */
+  demoMode?: boolean;
+  /** Service health used by the map and status totals. */
+  serviceNodes?: OpsServiceNode[];
   /** Dashboard title shown in the top bar */
   title?: string;
   /** System/app name shown alongside the title */

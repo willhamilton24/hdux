@@ -389,3 +389,15 @@
 
 .hdux-landing__pro-badge { opacity: 1; }
 .hdux-landing__pricing-cta { display: flex; flex-direction: column; gap: 8px; }
+
+.hdux-landing__features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
+  gap: 16px;
+}
+.hdux-landing .hdux-btn,
+.hdux-landing__buy-btn { max-width: 100%; white-space: normal; }
+.hdux-landing__templates-grid { grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); }
+.hdux-landing__component-demo { flex-wrap: wrap; }
+.hdux-landing .hdux-datagrid__toolbar { flex-wrap: wrap; }
+.hdux-landing .hdux-datagrid__search { min-width: 0; }

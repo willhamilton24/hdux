@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { HduxThemeProvider } from "../../../theme/ThemeProvider";
-import { TopBar, BottomBar, BarLeft, BarRight, BarElement, ThemeSelector } from "../../../components/Bar";
+import { TopBar, BottomBar, BarLeft, BarCenter, BarRight, BarElement, ThemeSelector } from "../../../components/Bar";
 import { Box } from "../../../components/Box";
 import { Text } from "../../../components/Text";
 import { AreaChart } from "../../components/AreaChart";
@@ -10,6 +10,7 @@ import { ProGate } from "../../ProGate";
 import type { OpsDashboardProps, OpsMetric } from "./types";
 import "../templates.css";
 import "./OpsDashboard.css";
+import "../responsive.css";
 
 const DEFAULT_METRICS = [
   { label: "CPU",  value: 68 },
@@ -38,12 +39,27 @@ const SEED_ROWS = [
   { id: 8, time: "14:16:01", level: "WARN",  service: "auth-service", message: "5 failed logins ip=10.0.0.4" },
 ];
 
+const SERVICE_NODES = [
+  { name: "api-gateway",  status: "ok"   as const },
+  { name: "auth-service", status: "ok"   as const },
+  { name: "db-primary",   status: "ok"   as const },
+  { name: "db-replica",   status: "warn" as const },
+  { name: "cache",        status: "ok"   as const },
+  { name: "worker-1",     status: "warn" as const },
+  { name: "worker-2",     status: "err"  as const },
+  { name: "worker-3",     status: "err"  as const },
+  { name: "scheduler",    status: "ok"   as const },
+  { name: "cdn-edge",     status: "ok"   as const },
+];
+
+const NODE_COLORS = { ok: "#00e676", warn: "#ff6f00", err: "#ff1744" } as const;
+
 const LOG_COLUMNS = [
   { key: "time" as const, header: "TIME", width: 88 },
   {
     key: "level" as const,
-    header: "LVL",
-    width: 58,
+    header: "LEVEL",
+    width: 68,
     sortable: true,
     render: (val: unknown) => {
       const colors: Record<string, string> = {
@@ -67,13 +83,14 @@ function jitter(base: number, range = 8) {
 }
 
 function useOpsDashboardLiveData(
+  demoMode: boolean,
   externalMetrics?: OpsDashboardProps["metrics"],
   externalSeries?: OpsDashboardProps["chartSeries"],
   externalLabels?: OpsDashboardProps["chartLabels"],
   externalRows?: OpsDashboardProps["tableRows"],
 ) {
   const isControlled =
-    !!externalMetrics || !!externalSeries || !!externalLabels || !!externalRows;
+    !demoMode || !!externalMetrics || !!externalSeries || !!externalLabels || !!externalRows;
 
   const [liveMetrics, setLiveMetrics] = useState<OpsMetric[]>(DEFAULT_METRICS.map((m) => ({ ...m })));
   const [liveHistory, setLiveHistory] = useState({
@@ -130,13 +147,13 @@ function useOpsDashboardLiveData(
     return () => clearInterval(id);
   }, []);
 
-  const metrics = externalMetrics ?? liveMetrics;
-  const chartSeries = externalSeries ?? [
+  const metrics = externalMetrics ?? (demoMode ? liveMetrics : []);
+  const chartSeries = externalSeries ?? (demoMode ? [
     { label: "CPU %", data: liveHistory.cpu, color: "var(--hdux-demo-cyan, #00d4ff)" },
     { label: "MEM %", data: liveHistory.mem, color: "var(--hdux-demo-purple, #7b2fff)" },
-  ];
+  ] : []);
   const chartLabels = externalLabels ?? DEFAULT_LABELS;
-  const tableRows = externalRows ? (externalRows as LogRow[]) : liveRows;
+  const tableRows = externalRows ? (externalRows as LogRow[]) : demoMode ? liveRows : [];
 
   const uptimeStr = [
     String(Math.floor(uptimeSec / 3600)).padStart(2, "0"),
@@ -149,9 +166,20 @@ function useOpsDashboardLiveData(
   return { metrics, chartSeries, chartLabels, tableRows, uptimeStr, hasAlert };
 }
 
+function useClock() {
+  const [time, setTime] = useState(() => new Date().toLocaleTimeString("en-GB"));
+  useEffect(() => {
+    const id = setInterval(() => setTime(new Date().toLocaleTimeString("en-GB")), 1000);
+    return () => clearInterval(id);
+  }, []);
+  return time;
+}
+
 function OpsDashboardInner({
   title = "OPS DASHBOARD",
   systemName = "HDUX CONTROL",
+  demoMode = false,
+  serviceNodes = demoMode ? SERVICE_NODES : [],
   metrics: extMetrics,
   chartSeries: extSeries,
   chartLabels: extLabels,
@@ -166,7 +194,13 @@ function OpsDashboardInner({
   }, []);
 
   const { metrics, chartSeries, chartLabels, tableRows, uptimeStr, hasAlert } =
-    useOpsDashboardLiveData(extMetrics, extSeries, extLabels, extRows);
+    useOpsDashboardLiveData(demoMode, extMetrics, extSeries, extLabels, extRows);
+
+  const clock = useClock();
+  const errCount   = serviceNodes.filter((n) => n.status === "err").length;
+  const warnCount  = serviceNodes.filter((n) => n.status === "warn").length;
+  const statusText = errCount > 0 ? `${errCount} ERROR` : warnCount > 0 ? `${warnCount} WARN` : serviceNodes.length ? "OPERATIONAL" : "NO SERVICE DATA";
+  const statusColor = errCount > 0 ? "#ff1744" : warnCount > 0 ? "#ff6f00" : "#00e676";
 
   return (
     <HduxThemeProvider
@@ -198,6 +232,11 @@ function OpsDashboardInner({
               </BarElement>
             )}
           </BarLeft>
+          <BarCenter>
+            <BarElement borderless>
+              <span className="hdux-ops-dashboard__clock">{clock}</span>
+            </BarElement>
+          </BarCenter>
           <BarRight>
             <BarElement>
               <Text variant="body">{title}</Text>
@@ -209,7 +248,7 @@ function OpsDashboardInner({
         </TopBar>
 
         <div className="hdux-ops-dashboard__body">
-          {/* Left column: gauges */}
+          {/* ── Left sidebar ───────────────────────────── */}
           <div className="hdux-ops-dashboard__sidebar">
             <Box animation="standard" hasLoaded={loaded} fullBorder>
               <GaugeCluster
@@ -227,9 +266,27 @@ function OpsDashboardInner({
                 gaugeSize={90}
               />
             </Box>
+
+            {/* Service health nodes */}
+            <Box animation="verticalFirst" hasLoaded={loaded} fullBorder>
+              <div className="hdux-ops-dashboard__nodes">
+                <Text variant="subheading">SERVICE MAP</Text>
+                <div className="hdux-ops-dashboard__node-grid">
+                  {serviceNodes.map((node) => (
+                    <div key={node.name} className="hdux-ops-dashboard__node">
+                      <span
+                        className="hdux-ops-dashboard__node-dot"
+                        style={{ background: NODE_COLORS[node.status] }}
+                      />
+                      <span className="hdux-ops-dashboard__node-name">{node.name}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </Box>
           </div>
 
-          {/* Main area */}
+          {/* ── Main area ──────────────────────────────── */}
           <div className="hdux-ops-dashboard__main">
             <div className="hdux-ops-dashboard__charts">
               {chartSeries.map((s, i) => (
@@ -272,6 +329,9 @@ function OpsDashboardInner({
           <BarRight>
             <BarElement>
               <Text variant="body">UPTIME {uptimeStr}</Text>
+            </BarElement>
+            <BarElement>
+              <span className="hdux-ops-dashboard__status" style={{ color: statusColor }}>● {statusText}</span>
             </BarElement>
           </BarRight>
         </BottomBar>

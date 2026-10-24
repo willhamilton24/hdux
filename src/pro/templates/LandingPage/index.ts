@@ -1,2 +1,2 @@
 export { LandingPage } from "./LandingPage";
-export type { LandingPageProps } from "./types";
+export type { LandingPageProps, LandingFeature, LandingStats } from "./types";
