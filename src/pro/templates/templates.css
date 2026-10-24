@@ -1,0 +1,45 @@
+/* Shared template containment, including narrow viewports and keyboard focus. */
+:is(.hdux-landing, .hdux-ops-dashboard, .hdux-game-lobby) .hdux-bar {
+  flex-wrap: wrap;
+}
+:is(.hdux-landing, .hdux-ops-dashboard, .hdux-game-lobby) .hdux-bar-section {
+  flex-wrap: wrap;
+  min-width: 0;
+}
+:is(.hdux-landing, .hdux-ops-dashboard, .hdux-game-lobby) .hdux-bar-element {
+  white-space: normal;
+  min-width: 0;
+}
+:is(.hdux-landing, .hdux-ops-dashboard, .hdux-game-lobby) .hdux-box {
+  min-width: 0;
+}
+:is(.hdux-landing, .hdux-ops-dashboard) .hdux-area-chart {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+}
+:is(.hdux-landing, .hdux-ops-dashboard) .hdux-datagrid__search {
+  min-width: 0;
+}
+:is(.hdux-landing, .hdux-ops-dashboard, .hdux-game-lobby) :focus-visible {
+  outline: 2px solid var(--hdux-main-color);
+  outline-offset: 3px;
+}
+
+:is(.hdux-landing, .hdux-ops-dashboard, .hdux-game-lobby) {
+  --hdux-demo-cyan: #00d4ff;
+  --hdux-demo-green: #00e676;
+  --hdux-demo-orange: #ff8a40;
+  --hdux-demo-red: #ff5575;
+  --hdux-demo-purple: #ad85ff;
+}
+[data-hdux-theme="light"] > .hdux-landing {
+  --hdux-demo-cyan: #006580;
+  --hdux-demo-green: #08783c;
+  --hdux-demo-orange: #a04400;
+  --hdux-demo-red: #c91636;
+  --hdux-demo-purple: #6320b0;
+}
+:is(.hdux-landing, .hdux-ops-dashboard, .hdux-game-lobby) .hdux-bar-element {
+  min-height: 48px;
+}

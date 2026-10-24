@@ -97,6 +97,13 @@ function DataGridInner<T extends Row>({
                     .filter(Boolean)
                     .join(" ")}
                   style={col.width ? { width: col.width } : undefined}
+                  tabIndex={col.sortable ? 0 : undefined}
+                  onKeyDown={(event) => {
+                    if (col.sortable && (event.key === "Enter" || event.key === " ")) {
+                      event.preventDefault();
+                      handleSort(col);
+                    }
+                  }}
                   onClick={() => handleSort(col)}
                   aria-sort={
                     sortKey === col.key

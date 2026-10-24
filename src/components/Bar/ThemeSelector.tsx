@@ -128,7 +128,9 @@ export function ThemeSelector({
   if (className) classes.push(className);
 
   return (
-    <div
+    <button
+      type="button"
+      aria-label={`Change theme (current: ${mode})`}
       className={classes.join(" ")}
       onClick={cycleMode}
       title={`Theme: ${mode}`}
@@ -170,6 +172,6 @@ export function ThemeSelector({
           fill={lineColor}
         />
       </svg>
-    </div>
+    </button>
   );
 }
