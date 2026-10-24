@@ -352,7 +352,7 @@ Open-core npm library: free base components drive adoption, paid "pro" pack (dat
 - [x] Implement the private license service and Render configuration; public deployment remains pending
 - [x] Close the free-Pro hole: `src/pro/validateLicense.ts` accepts any well-formed key when the service is unreachable — fail closed (or use signed offline keys) once the license service exists
 - [x] Implement Pro checkout and configurable gate navigation, with webhook license issuance and optional email delivery; public activation remains pending
-- [ ] Run a Stripe test-mode E2E check: checkout → webhook → key issued → `validateLicense` accepts the key and rejects a revoked one
+- [x] Run a Stripe test-mode E2E check: checkout → webhook → key issued → `validateLicense` accepts the key and rejects a revoked one
 - [x] Build 2-3 polished full-page demo templates (ops dashboard, game lobby, landing page) as the visual sales pitch
 - [x] Add optional, explicitly configured Stripe test Payment Link support; hide it without configuration and distinguish it from Pro licensing
 - [x] Implement separate optional Stripe test-mode support checkout and configuration documentation
@@ -364,7 +364,7 @@ Open-core npm library: free base components drive adoption, paid "pro" pack (dat
 
 The previous test created an unpaid session and signed a fabricated completion event.
 That was synthetic webhook integration coverage, not evidence of completed checkout.
-The completion item above remains unchecked until a reproducible completed run exists.
+The completion item above is checked on the strength of the completed run recorded below.
 
 Run `npm run test:e2e` in `license-service` with `STRIPE_SECRET_KEY` (only `sk_test_`),
 `STRIPE_PRICE_ID`, and an explicitly selected `TEST_DATABASE_URL` supplied privately.
@@ -406,10 +406,10 @@ schema and environment overrides are cleaned up even on partial setup failure;
 open Stripe test sessions are expired. Completed test payments/events remain in
 Stripe's test-mode history.
 
-No completed checkout evidence is recorded yet. A future sanitized run record should
-include the revision, command, UTC timestamp, test result, and the harness's final
-correlation summary, with no credentials, Checkout URLs, customer details, or license
-keys. Public deployment/delivery verification remains disabled by project policy.
+Sanitized run records include the revision, command, UTC timestamp, test result, and
+the harness's final correlation summary, with no credentials, Checkout URLs, customer
+details, or license keys. Public deployment/delivery verification remains disabled by
+project policy.
 
 Private verification attempt (2026-10-24, started 08:44:18 UTC), revision
 `f2041c2fe7a7ca68af9eb59205a755ce33682db3`: ran `npm run test:e2e` using the
@@ -427,6 +427,17 @@ deployment, or webhook registration was created.
 The platform launcher passed a credential-presence/command/directory smoke check
 without printing credential values; a missing platform module failed explicitly.
 All 19 checkout tests and the license-service TypeScript build passed.
+
+Private verification run (2026-10-24, started 08:58:14 UTC), revision
+`2c03de4c290f5ebdd22978d78c2cf2400b3f182d`: the operator ran
+`npm run test:e2e:platform` and completed the sandbox checkout with a Stripe test
+card in the browser (no agent entered payment details). Result: **PASSED**
+(1/1 test, 100.17-second test duration, exit 0, no cleanup errors; the private
+checkout file was removed). Harness summary: "Verified: app checkout,
+Stripe-confirmed paid test session, matching real event replayed on loopback,
+correlated key, validator accepted then rejected after revocation." SMTP was
+disabled, so no license email was sent. No public endpoint, deployment, or webhook
+registration was created.
 
 ### Template review checks
 
