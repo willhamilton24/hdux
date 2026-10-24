@@ -390,7 +390,16 @@ include the revision, command, UTC timestamp, test result, and the harness's fin
 correlation summary, with no credentials, Checkout URLs, customer details, or license
 keys. Public deployment/delivery verification remains disabled by project policy.
 
-Review-fix checks (2026-10-22): root build/typecheck, license-service build, and\nstandalone strict typechecking of the E2E test passed. Missing-config and non-test\ncredential probes failed explicitly as intended. The normal E2E command was\nBLOCKED by missing local configuration; checkout, database isolation and key\nissuance have not been verified against the provisioned services in this run.\nA failed database-connection probe also exited promptly without a server-close hang.\nEOF
+Review-fix checks (2026-10-22): root build/typecheck, license-service build, and
+standalone strict typechecking of the E2E test passed. Missing-config and non-test
+credential probes failed explicitly as intended. The normal E2E command was
+BLOCKED by missing local configuration; checkout, database isolation and key
+issuance have not been verified against the provisioned services in this run.
+A failed database-connection probe also exited promptly without a server-close hang.
+
+Recheck (2026-10-24): root `npm run typecheck` and `npm run build`, license-service
+`npm run build`, and `npm run test:e2e` with no credentials all still pass / BLOCK
+as expected after the support payment link additions. No code changes required.
 
 ### Template review checks
 
