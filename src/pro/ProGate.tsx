@@ -36,13 +36,25 @@ function BuyButton() {
   };
 
   return (
-    <button
-      className="hdux-pro-gate__buy"
-      onClick={() => void handleBuy()}
-      disabled={loading}
-    >
-      {loading ? "LOADING…" : "BUY HDUX PRO →"}
-    </button>
+    <div className="hdux-pro-gate__buttons">
+      <button
+        className="hdux-pro-gate__buy"
+        onClick={() => void handleBuy()}
+        disabled={loading}
+      >
+        {loading ? "LOADING…" : "BUY HDUX PRO →"}
+      </button>
+      <div className="hdux-pro-gate__funding">
+        <p className="hdux-pro-gate__funding-text">Or support development:</p>
+        <a href="https://github.com/sponsors/hamiltondynamic" target="_blank" rel="noopener noreferrer" className="hdux-pro-gate__funding-link">
+          GitHub Sponsors
+        </a>
+        <span className="hdux-pro-gate__funding-sep">·</span>
+        <a href="https://polar.sh/hamiltondynamic" target="_blank" rel="noopener noreferrer" className="hdux-pro-gate__funding-link">
+          Polar
+        </a>
+      </div>
+    </div>
   );
 }
 

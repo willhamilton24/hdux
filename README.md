@@ -304,7 +304,12 @@ Wrap your app (or any subtree) in `<HduxProProvider licenseKey="…">`. The key 
 MIT
 
 ## 💰 Path to Revenue
-Open-core npm library: free base components drive adoption, paid "pro" pack (data-viz HUD widgets, dashboards, game-UI templates) sold with license keys.
+Open-core npm library: free base components drive adoption, paid "pro" pack (data-viz HUD widgets, dashboards, game-UI templates) sold with license keys. Secondary revenue through GitHub Sponsors and Polar supports ongoing development.
+
+### Funding
+- **Primary:** HDUX Pro — one-time license for advanced widgets and templates
+- **Secondary:** [GitHub Sponsors](https://github.com/sponsors/hamiltondynamic) — recurring support from the community
+- **Secondary:** [Polar](https://polar.sh/hamiltondynamic) — sustainable open-source funding platform
 
 ### Release TODOs
 - [x] Publish v0.1 to npm and deploy the Storybook (GitHub Action already exists) as a public docs/demo site
@@ -315,7 +320,7 @@ Open-core npm library: free base components drive adoption, paid "pro" pack (dat
 - [x] Add a "Buy HDUX Pro" checkout path (Stripe Checkout session against the provisioned price) linked from README and the Pro gate overlay, delivering the license key by email
 - [ ] Run a Stripe test-mode E2E check: checkout → webhook → key issued → `validateLicense` accepts the key and rejects a revoked one
 - [x] Build 2-3 polished full-page demo templates (ops dashboard, game lobby, landing page) as the visual sales pitch
-- [ ] Add GitHub Sponsors/Polar funding links as a secondary revenue channel
+- [x] Add GitHub Sponsors/Polar funding links as a secondary revenue channel
 - [ ] Launch posts with animation GIFs on r/reactjs, Hacker News, and X; submit to component-library directories (waits on the deployment switch)
 - [ ] Archive HDUI-Prototype with a pointer here so traffic consolidates on one repo (migration docs drafted; archiving the public repo and pointing its traffic here waits on the deployment switch)
 

@@ -303,6 +303,16 @@ function LandingPageInner({
               <Text variant="body">{brandName} · OPEN CORE</Text>
             </BarElement>
           </BarLeft>
+          <BarCenter>
+            <BarElement borderless>
+              <a href="https://github.com/sponsors/hamiltondynamic" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", color: "inherit", marginRight: "1.5rem" }}>
+                <Text variant="body" style={{ fontSize: "0.75rem", opacity: 0.7 }}>★ SPONSOR</Text>
+              </a>
+              <a href="https://polar.sh/hamiltondynamic" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", color: "inherit" }}>
+                <Text variant="body" style={{ fontSize: "0.75rem", opacity: 0.7 }}>◆ POLAR</Text>
+              </a>
+            </BarElement>
+          </BarCenter>
           <BarRight>
             <BarElement>
               <Text variant="body">MIT LICENSE</Text>

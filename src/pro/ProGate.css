@@ -70,3 +70,43 @@
   opacity: 0.5;
   cursor: default;
 }
+
+.hdux-pro-gate__buttons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.hdux-pro-gate__funding {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.hdux-pro-gate__funding-text {
+  font-size: 0.65rem;
+  opacity: 0.65;
+  margin: 0;
+}
+
+.hdux-pro-gate__funding-link {
+  color: var(--hdux-color-main, #00d4ff);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-decoration: none;
+  transition: opacity 0.15s;
+}
+
+.hdux-pro-gate__funding-link:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
+
+.hdux-pro-gate__funding-sep {
+  opacity: 0.5;
+  font-size: 0.65rem;
+}
