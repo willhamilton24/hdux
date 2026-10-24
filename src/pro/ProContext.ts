@@ -7,6 +7,7 @@ export interface HduxProContextValue {
   supportPaymentLink?: string;
   status: ProLicenseStatus;
   licenseKey: string | undefined;
+  checkoutUrl?: string;
 }
 
 export const HduxProContext = createContext<HduxProContextValue>({

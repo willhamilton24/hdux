@@ -1,5 +1,6 @@
 import express from 'express';
 import Stripe from 'stripe';
+import { installCheckout } from './checkout';
 import { migrate, createLicense, findLicenseByKey, findLicenseBySession } from './db';
 import { generateKey } from './keys';
 import { sendLicenseEmail } from './email';
@@ -8,9 +9,10 @@ export { migrate } from './db';
 
 const PORT = Number(process.env.PORT ?? 10000);
 const STRIPE_PRICE_ID = process.env.STRIPE_PRICE_ID ?? 'price_1UStJ7GRjKD6n9dmqdwh3trU';
-const BASE_URL = process.env.SERVICE_URL ?? 'https://api.hdux.dev';
+const secret = process.env.STRIPE_SECRET_KEY;
+if (!secret?.startsWith('sk_test_')) throw new Error('Only Stripe test mode is enabled');
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+const stripe = new Stripe(secret);
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
 const app = express();
@@ -39,7 +41,7 @@ app.post(
         const session = event.data.object as Stripe.Checkout.Session;
 
         // Only issue keys for paid sessions on the HDUX Pro price
-        if (session.payment_status === 'paid' && session.metadata?.product !== 'hdux-support') {
+        if (!event.livemode && !session.livemode && session.metadata?.product === 'hdux-pro' && session.payment_status === 'paid') {
           const lineItems = await stripe.checkout.sessions.listLineItems(session.id, { limit: 5 });
           const hasPro = lineItems.data.some((item) => item.price?.id === STRIPE_PRICE_ID);
 
@@ -76,49 +78,7 @@ app.post(
 
 app.use(express.json());
 
-function createCheckoutSession(opts: {
-  email?: string;
-  success_url?: string;
-  cancel_url?: string;
-}): Promise<Stripe.Checkout.Session> {
-  return stripe.checkout.sessions.create({
-    mode: 'payment',
-    line_items: [{ price: STRIPE_PRICE_ID, quantity: 1 }],
-    customer_email: opts.email,
-    success_url:
-      opts.success_url ??
-      `${BASE_URL}/v1/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: opts.cancel_url ?? 'https://hdux.dev',
-    metadata: { product: 'hdux-pro' },
-  });
-}
-
-// Create a Stripe Checkout session for HDUX Pro (used by the ProGate buy button)
-app.post('/v1/checkout/session', async (req, res): Promise<void> => {
-  const body = req.body as { email?: string; success_url?: string; cancel_url?: string };
-  try {
-    const session = await createCheckoutSession(body);
-    res.json({ url: session.url });
-  } catch (err) {
-    console.error('Failed to create checkout session:', err);
-    res.status(500).json({ error: 'Failed to create checkout session' });
-  }
-});
-
-// Plain-link entry point (e.g. the README buy link): create a session and
-// redirect the browser straight to Stripe Checkout
-app.get('/v1/checkout/session', async (_req, res): Promise<void> => {
-  try {
-    const session = await createCheckoutSession({});
-    if (!session.url) {
-      throw new Error('Checkout session has no URL');
-    }
-    res.redirect(303, session.url);
-  } catch (err) {
-    console.error('Failed to create checkout session:', err);
-    res.status(500).send('<h1>Failed to start checkout — please try again</h1>');
-  }
-});
+installCheckout(app, stripe, STRIPE_PRICE_ID);
 
 // Success page — surfaces the license key to the buyer after checkout
 app.get('/v1/checkout/success', async (req, res): Promise<void> => {
@@ -151,7 +111,7 @@ app.get('/v1/checkout/success', async (req, res): Promise<void> => {
   <div class="key">${key}</div>
   <p>Add it to your app:</p>
   <pre>&lt;HduxProProvider licenseKey="${key}"&gt;\n  {/* your app */}\n&lt;/HduxProProvider&gt;</pre>
-  <p><a href="https://hdux.dev">hdux.dev</a></p>
+
 </body>
 </html>`);
   } catch (err) {

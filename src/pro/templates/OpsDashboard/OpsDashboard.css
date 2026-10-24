@@ -2,7 +2,7 @@
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background: var(--hdux-bg, #06080f);
+  background: var(--hdux-background, #06080f);
 }
 
 .hdux-ops-dashboard__body {
@@ -34,13 +34,18 @@
   gap: 16px;
 }
 
+.hdux-ops-dashboard__charts { grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); }
+@media (max-width: 700px) {
+  .hdux-ops-dashboard__body { flex-direction: column; padding: 24px 16px; }
+  .hdux-ops-dashboard__sidebar { flex-basis: auto; }
+}
 /* Live clock in center bar */
 .hdux-ops-dashboard__clock {
   font-family: var(--hdux-font-main, monospace);
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.18em;
-  color: var(--hdux-color-main, #00d4ff);
+  color: var(--hdux-main-color, #00d4ff);
   opacity: 0.7;
 }
 
@@ -65,7 +70,7 @@
   font-size: 0.65rem;
   letter-spacing: 0.1em;
   padding: 3px 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--hdux-color-main, #00d4ff) 8%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--hdux-main-color, #00d4ff) 8%, transparent);
 }
 
 .hdux-ops-dashboard__node-dot {
@@ -76,7 +81,7 @@
 }
 
 .hdux-ops-dashboard__node-name {
-  color: var(--hdux-color-main, #00d4ff);
+  color: var(--hdux-main-color, #00d4ff);
   opacity: 0.7;
 }
 

@@ -1,6 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { HduxThemeProvider } from "../../../theme/ThemeProvider";
-import { TopBar, BottomBar, BarLeft, BarCenter, BarRight, BarElement, ThemeSelector } from "../../../components/Bar";
+import {
+  TopBar, BottomBar,
+  BarLeft, BarRight, BarCenter,
+  BarElement, ThemeSelector,
+} from "../../../components/Bar";
 import { Box } from "../../../components/Box";
 import { Text } from "../../../components/Text";
 import { Button } from "../../../components/Button";
@@ -8,103 +12,231 @@ import { StatBar } from "../../../components/StatBar";
 import { RadialMeter } from "../../../components/RadialMeter";
 import { AreaChart } from "../../components/AreaChart";
 import { SupportFunding } from "../../SupportFunding";
-import { ProGate } from "../../ProGate";
+import { GaugeCluster } from "../../components/GaugeCluster";
+import { DataGrid } from "../../components/DataGrid";
 import type { LandingPageProps } from "./types";
+import "../templates.css";
 import "./LandingPage.css";
 import "../responsive.css";
 
-const DEFAULT_FEATURES = [
-  {
-    label: "REALTIME DASHBOARDS",
-    description: "Live data visualization with animated charts, gauges, and event logs. Built for ops, analytics, and monitoring interfaces.",
-    stat: "3 PRO WIDGETS",
-  },
-  {
-    label: "GAME INTERFACES",
-    description: "Pre-built lobby, team view, ready state, and countdown flows. Drop in and customize for your multiplayer title.",
-    stat: "LOBBY + HUD READY",
-  },
-  {
-    label: "HUD COMPONENTS",
-    description: "RadialMeter, StatBar, GaugeCluster — the building blocks of sci-fi UIs, battle-tested and animation-ready.",
-    stat: "10+ COMPONENTS",
-  },
-];
+// Only absolute HTTP(S) destinations are accepted, including loopback development services.
+function safeUrl(value: unknown): string | undefined {
+  if (typeof value !== "string") return;
+  try {
+    const url = new URL(value);
+    if (["https:", "http:"].includes(url.protocol) && !url.username && !url.password) return url.href;
+  } catch { /* Invalid configuration or response. */ }
+}
 
-const DEFAULT_STATS = [
-  { label: "COMPONENTS", value: "10+" },
-  { label: "PRO WIDGETS", value: "3" },
-  { label: "FULL-PAGE TEMPLATES", value: "3" },
-  { label: "PEER DEPS", value: "1" },
-];
+const LIVE_LABELS = ["T-7", "T-6", "T-5", "T-4", "T-3", "T-2", "T-1", "NOW"];
 
-// Sparkline data cycling for the live area chart demo
-const SPARK_FRAMES = [
-  [18, 35, 52, 44, 68, 55, 72, 60, 80, 68],
-  [35, 52, 44, 68, 55, 72, 60, 80, 68, 74],
-  [52, 44, 68, 55, 72, 60, 80, 68, 74, 62],
-  [44, 68, 55, 72, 60, 80, 68, 74, 62, 70],
-];
+function jitter(base: number, range: number) {
+  return Math.round(Math.min(100, Math.max(1, base + (Math.random() - 0.5) * range * 2)));
+}
 
-function LandingPageInner({
-  headline = "HAMILTON DYNAMIC UX",
-  tagline = "The sci-fi design system for React. Open-core base, Pro for the good stuff.",
-  brandName = "HDUX",
-  ctaLabel = "GET HDUX PRO →",
-  onCtaClick,
-  features = DEFAULT_FEATURES,
-  stats = DEFAULT_STATS,
-  color = "#00d4ff",
-  className,
-  style,
-}: LandingPageProps) {
-  const pendingRef = useRef(false);
-  const [pending, setPending] = useState(false);
-  const [checkoutError, setCheckoutError] = useState("");
-  const [loaded, setLoaded] = useState(false);
-  const [frameIdx, setFrameIdx] = useState(0);
-  const [gaugeValues, setGaugeValues] = useState([68, 82, 44, 91]);
+function makeSeries(bases: number[], range: number) {
+  return bases.map((b) => jitter(b, range));
+}
 
-  useEffect(() => {
-    const id = setTimeout(() => setLoaded(true), 100);
-    return () => clearTimeout(id);
-  }, []);
+function useLiveData() {
+  const [tick, setTick] = useState(0);
+  const [history, setHistory] = useState({
+    cpu: [22, 35, 55, 48, 68, 72, 60, 68],
+    mem: [60, 65, 70, 72, 75, 80, 82, 82],
+    net: [10, 18, 22, 30, 25, 40, 35, 45],
+    gauges: [68, 82, 44, 75],
+  });
 
-  // Cycle sparkline frames
-  useEffect(() => {
-    const id = setInterval(() => setFrameIdx((i) => (i + 1) % SPARK_FRAMES.length), 1800);
-    return () => clearInterval(id);
-  }, []);
-
-  // Drift gauge values
   useEffect(() => {
     const id = setInterval(() => {
-      setGaugeValues((prev) =>
-        prev.map((v) => Math.min(99, Math.max(5, v + (Math.random() - 0.5) * 8)))
-      );
+      setTick((t) => t + 1);
+      setHistory((prev) => {
+        const next = (arr: number[], base: number) => [
+          ...arr.slice(1),
+          jitter(base, 10),
+        ];
+        return {
+          cpu:    next(prev.cpu,    65),
+          mem:    next(prev.mem,    78),
+          net:    next(prev.net,    38),
+          gauges: makeSeries([65, 78, 45, 72], 8),
+        };
+      });
     }, 2200);
     return () => clearInterval(id);
   }, []);
 
-  const sparkData = SPARK_FRAMES[frameIdx].map((v, i) => ({ value: v, label: String(i) }));
+  return { history, tick };
+}
 
-  async function handleCta() {
-    if (pendingRef.current) return;
+const FREE_TIER = [
+  "Box — animated corner container",
+  "Text — typewriter & sweep animations",
+  "TopBar / BottomBar",
+  "BarElement — nav unit",
+  "Button",
+  "Input",
+  "Modal",
+  "StatBar — animated fill bar",
+  "RadialMeter — circular gauge",
+  "Table — data table",
+  "ThemeSelector",
+  "useTheme — hook",
+];
+
+const PRO_FEATURES = [
+  "AreaChart — multi-series SVG chart",
+  "DataGrid — sortable, filterable table",
+  "GaugeCluster — radial gauge array",
+  "OpsDashboard template",
+  "GameLobby template",
+  "LandingPage template",
+  "Commercial use license",
+  "Priority email support",
+];
+
+const DOCS_ROWS = [
+  { id: 1, component: "Box", category: "Layout", status: "stable", since: "0.1" },
+  { id: 2, component: "Text", category: "Typography", status: "stable", since: "0.1" },
+  { id: 3, component: "AreaChart", category: "Pro / Chart", status: "stable", since: "0.2" },
+  { id: 4, component: "GaugeCluster", category: "Pro / HUD", status: "stable", since: "0.2" },
+  { id: 5, component: "DataGrid", category: "Pro / Data", status: "stable", since: "0.2" },
+  { id: 6, component: "OpsDashboard", category: "Pro / Template", status: "stable", since: "0.3" },
+  { id: 7, component: "GameLobby", category: "Pro / Template", status: "stable", since: "0.3" },
+  { id: 8, component: "LandingPage", category: "Pro / Template", status: "stable", since: "0.3" },
+];
+type DocsRow = typeof DOCS_ROWS[number];
+
+const DOCS_COLUMNS = [
+  { key: "component" as const, header: "COMPONENT", sortable: true },
+  { key: "category" as const, header: "CATEGORY", sortable: true },
+  {
+    key: "status" as const,
+    header: "STATUS",
+    width: 80,
+    render: (val: unknown) => (
+      <span style={{ color: val === "stable" ? "var(--hdux-demo-green, #00e676)" : "var(--hdux-demo-orange, #ff6f00)", fontSize: "0.65rem", letterSpacing: "0.12em" }}>
+        {String(val).toUpperCase()}
+      </span>
+    ),
+  },
+  { key: "since" as const, header: "SINCE", width: 60 },
+];
+
+function useCheckout({ proUrl, serviceUrl, onCtaClick }: Pick<LandingPageProps, "proUrl" | "serviceUrl" | "onCtaClick">) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const pendingRef = useRef(false);
+  const destination = safeUrl(proUrl);
+  const service = safeUrl(serviceUrl);
+  const unavailable = onCtaClick ? "" : proUrl !== undefined
+    ? (!destination ? "Checkout unavailable: configure a valid HTTP(S) Pro destination." : "")
+    : (!service ? "Checkout unavailable: the app must configure a service URL." : "");
+
+  const handleBuy = async () => {
+    if (pendingRef.current || unavailable) return;
+    setError("");
+    if (destination && !onCtaClick) {
+      window.location.assign(destination);
+      return;
+    }
     pendingRef.current = true;
-    setPending(true);
-    setCheckoutError("");
+    setLoading(true);
     try {
-      if (!onCtaClick) throw new Error("Checkout is not configured.");
-      await onCtaClick();
-    } catch {
-      setCheckoutError(onCtaClick
-        ? "Unable to start checkout. Please try again."
-        : "Checkout is not configured. Please contact the site owner.");
+      if (onCtaClick) { await onCtaClick(); return; }
+      // Reuse the existing Stripe license-service checkout route.
+      const res = await fetch(`${service!.replace(/\/$/, "")}/v1/checkout/session`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cancel_url: window.location.href }),
+        signal: AbortSignal.timeout(15000),
+      });
+      if (!res.ok) throw new Error(`Checkout failed (HTTP ${res.status}). Please retry.`);
+      let data: unknown;
+      try { data = await res.json(); }
+      catch { throw new Error("Checkout returned malformed data. Please retry."); }
+      if (!data || typeof data !== "object" || !("url" in data) || !data.url) {
+        throw new Error("Checkout returned no destination URL. Please retry.");
+      }
+      const redirect = safeUrl(data.url);
+      if (!redirect) throw new Error("Checkout returned an unsafe or invalid URL. Please retry.");
+      window.location.assign(redirect);
+    } catch (cause) {
+      setError(onCtaClick ? "Unable to start checkout. Please try again." : cause instanceof Error && cause.message.startsWith("Checkout")
+        ? cause.message : "Unable to connect to checkout. Please retry.");
     } finally {
       pendingRef.current = false;
-      setPending(false);
+      setLoading(false);
     }
-  }
+  };
+
+  return { loading, error, unavailable, handleBuy };
+}
+
+function BuyButton({ checkout, label }: { checkout: ReturnType<typeof useCheckout>; label: string }) {
+  const { loading, error, unavailable, handleBuy } = checkout;
+  const messageId = useId();
+
+  return (
+    <div className="hdux-landing__checkout">
+      <button
+        className="hdux-landing__buy-btn"
+        onClick={() => void handleBuy()}
+        disabled={loading || !!unavailable}
+        aria-describedby={messageId}
+        aria-busy={loading}
+      >
+        {loading ? "LOADING…" : error ? "RETRY CHECKOUT →" : label}
+      </button>
+      <span id={messageId} role={error ? "alert" : "status"} className="hdux-landing__checkout-message">
+        {error || unavailable}
+      </span>
+    </div>
+  );
+}
+
+export function LandingPage({
+  productName = "HDUX",
+  headline,
+  brandName,
+  ctaLabel = "BUY HDUX PRO →",
+  onCtaClick,
+  features,
+  stats,
+  color = "#00d4ff",
+  tagline = "THE HUD FRAMEWORK FOR REACT",
+  subTagline = "Sci-fi HUD components for dashboards, games, and tools. Free base library — Pro tier unlocks charts, grids, and full-page templates.",
+  freeUrl,
+  proUrl,
+  serviceUrl,
+  className,
+  style,
+}: LandingPageProps) {
+  const checkout = useCheckout({ proUrl, serviceUrl, onCtaClick });
+  const [heroLoaded, setHeroLoaded] = useState(false);
+  const [featuresLoaded, setFeaturesLoaded] = useState(false);
+  const [proLoaded, setProLoaded] = useState(false);
+  const [statVal, setStatVal] = useState(0);
+  const { history } = useLiveData();
+
+  useEffect(() => {
+    const t1 = setTimeout(() => setHeroLoaded(true), 200);
+    const t2 = setTimeout(() => setFeaturesLoaded(true), 600);
+    const t3 = setTimeout(() => setProLoaded(true), 900);
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+  }, []);
+
+  useEffect(() => {
+    const end = 14;
+    const step = 40;
+    let cur = 0;
+    const id = setInterval(() => {
+      cur = Math.min(end, cur + 1);
+      setStatVal(cur);
+      if (cur >= end) clearInterval(id);
+    }, step);
+    return () => clearInterval(id);
+  }, []);
 
   return (
     <HduxThemeProvider
@@ -117,210 +249,367 @@ function LandingPageInner({
           customColors: { success: "#00e676", failure: "#ff1744", caution: "#ff6f00" },
           typography: { mainFont: '"Quantico", system-ui, monospace' },
           borderWidth: "1px",
-          boxCorners: { length: "14px", width: "2px" },
+          boxCorners: { length: "16px", width: "2px" },
         },
-        dark: { mainColor: color, textColor: "#e0e0e0", background: "#06080f" },
-        light: { mainColor: "#0050a0", textColor: "#111", background: "#f5f7fa" },
+        light:  { mainColor: "#0a3a5c", background: "#f4f6f8", textColor: "#0a0a0a", customColors: { success: "#08783c", caution: "#a04400", failure: "#c91636" } },
+        dark:   { mainColor: color, background: "#06080f", textColor: "#e0e0e0" },
+        custom: { mainColor: "#ad85ff", background: "#08030f", textColor: "#e0d4ff" },
+        transitionDuration: "350ms",
       }}
     >
       <div
         className={["hdux-landing", className].filter(Boolean).join(" ")}
         style={style}
       >
-        {/* Background grid */}
-        <div className="hdux-landing__grid-bg" aria-hidden="true" />
-
-        <TopBar>
+        {/* ── Top Navigation ─────────────────────────────────────── */}
+        <TopBar static>
           <BarLeft>
             <BarElement>
-              <span className="hdux-landing__brand">{brandName}</span>
+              <Text variant="body">{brandName ?? productName}</Text>
             </BarElement>
           </BarLeft>
           <BarCenter>
             <BarElement borderless>
-              <Text variant="body" style={{ opacity: 0.5, fontSize: "0.65rem" }}>
-                HAMILTON DYNAMIC · OPEN CORE
-              </Text>
+              <Text variant="body" color="inherit">COMPONENTS</Text>
             </BarElement>
           </BarCenter>
           <BarRight>
             <BarElement borderless>
-              <ThemeSelector size={28} />
+              <ThemeSelector size={26} />
+            </BarElement>
+            <BarElement>
+              <BuyButton checkout={checkout} label={ctaLabel} />
             </BarElement>
           </BarRight>
         </TopBar>
 
-        <div className="hdux-landing__body">
-
-          {/* ── Hero ─────────────────────────────────────────── */}
-          <section className="hdux-landing__hero">
-            <Box animation="standard" hasLoaded={loaded} fullBorder className="hdux-landing__hero-box">
-              <div className="hdux-landing__hero-inner">
-                <div className="hdux-landing__hero-badge">[ OPEN SOURCE + PRO ]</div>
-                <Text variant="h1" animation="print" className="hdux-landing__headline">
-                  {headline}
+        {/* ── Hero ───────────────────────────────────────────────── */}
+        <section className="hdux-landing__hero">
+          <div className="hdux-landing__hero-inner">
+            <Box animation="standard" hasLoaded={heroLoaded} fullBorder>
+              <div className="hdux-landing__hero-box">
+                <div className="hdux-landing__hero-label">HAMILTON DYNAMIC</div>
+                <div className="hdux-landing__hero-title">{headline ?? productName}</div>
+                <div className="hdux-landing__hero-tagline">{tagline}</div>
+                <Text variant="body" animation="sweep">
+                  {subTagline}
                 </Text>
-                <Text variant="subheading" animation="sweep" className="hdux-landing__tagline">
-                  {tagline}
-                </Text>
-
-                {/* Live mini-demo strip */}
-                <div className="hdux-landing__hero-demo">
-                  <div className="hdux-landing__demo-chart">
-                    <AreaChart
-                      data={sparkData}
-                      color={color}
-                      width={220}
-                      height={80}
-                      showGrid={false}
-                      showXLabels={false}
-                      showYLabels={false}
-                      animate
-                      title="LIVE THROUGHPUT"
-                    />
-                  </div>
-                  <div className="hdux-landing__demo-gauges">
-                    <RadialMeter value={Math.round(gaugeValues[0])} label="CPU" size={72} />
-                    <RadialMeter value={Math.round(gaugeValues[1])} label="MEM" size={72} />
-                    <RadialMeter value={Math.round(gaugeValues[2])} label="DISK" size={72} />
-                  </div>
+                <div className="hdux-landing__hero-ctas" style={{ marginTop: "28px" }}>
+                  <Button
+                    disabled={!safeUrl(freeUrl)}
+                    onClick={() => { const url = safeUrl(freeUrl); if (url) window.open(url, "_blank", "noopener,noreferrer"); }}
+                  >
+                    GET HDUX FREE
+                  </Button>
+                  {!safeUrl(freeUrl) && <span role="status">Free download unavailable: configure a valid HTTP(S) destination.</span>}
+                  <BuyButton checkout={checkout} label={ctaLabel} />
                 </div>
 
-                <div className="hdux-landing__hero-cta" aria-busy={pending}>
-                  <Button onClick={() => void handleCta()} color={color} disabled={pending}>
-                    {pending ? "LOADING…" : ctaLabel}
-                  </Button>
-                  <span className="hdux-landing__hero-sub">One-time license · Unlimited projects</span>
+                <div className="hdux-landing__hero-stats">
+                  {stats ? stats.map((stat) => (
+                    <div className="hdux-landing__stat" key={stat.label}>
+                      <span className="hdux-landing__stat-value">{stat.value}</span>
+                      <span className="hdux-landing__stat-label">{stat.label}</span>
+                    </div>
+                  )) : <>
+                  <div className="hdux-landing__stat">
+                    <span className="hdux-landing__stat-value">{statVal}</span>
+                    <span className="hdux-landing__stat-label">COMPONENTS</span>
+                  </div>
+                  <div className="hdux-landing__stat">
+                    <span className="hdux-landing__stat-value">TS</span>
+                    <span className="hdux-landing__stat-label">TYPESCRIPT</span>
+                  </div>
+                  <div className="hdux-landing__stat">
+                    <span className="hdux-landing__stat-value">MIT</span>
+                    <span className="hdux-landing__stat-label">LICENSE</span>
+                  </div>
+                  <div className="hdux-landing__stat">
+                    <span className="hdux-landing__stat-value">R18</span>
+                    <span className="hdux-landing__stat-label">REACT 18+</span>
+                  </div>
+                  </>}
                 </div>
               </div>
             </Box>
-          </section>
+          </div>
+        </section>
 
-          {/* ── Stats strip ──────────────────────────────────── */}
-          <section className="hdux-landing__stats">
-            {stats.map((s) => (
-              <div key={s.label} className="hdux-landing__stat">
-                <span className="hdux-landing__stat-value" style={{ color }}>{s.value}</span>
-                <span className="hdux-landing__stat-label">{s.label}</span>
-              </div>
-            ))}
-          </section>
-
-          {/* ── Feature grid ─────────────────────────────────── */}
-          <section className="hdux-landing__features">
-            {features.map((f, i) => (
-              <Box
-                key={i}
-                animation={i === 0 ? "verticalFirst" : i === 1 ? "standard" : "horizontalFirst"}
-                hasLoaded={loaded}
-                fullBorder
-                className="hdux-landing__feature-box"
-              >
-                <div className="hdux-landing__feature">
-                  {f.stat && (
-                    <span className="hdux-landing__feature-badge" style={{ color }}>{f.stat}</span>
-                  )}
-                  <Text variant="h5" animation="print">{f.label}</Text>
-                  <Text variant="body" className="hdux-landing__feature-desc">{f.description}</Text>
-                  {i === 0 && (
-                    <div className="hdux-landing__feature-demo">
-                      <StatBar label="THROUGHPUT" value={Math.round(gaugeValues[3])} color={color} showValue="percent" height={6} />
-                      <StatBar label="LATENCY" value={Math.round(gaugeValues[0] * 0.6)} color="#7b2fff" showValue="percent" height={6} />
-                    </div>
-                  )}
-                  {i === 1 && (
-                    <div className="hdux-landing__feature-demo">
-                      <div className="hdux-landing__player-row">
-                        <span className="hdux-landing__dot" style={{ background: "#00e676" }} />
-                        <span className="hdux-landing__player-name" style={{ color }}>ACE_PILOT</span>
-                        <span className="hdux-landing__player-stat">2841 MMR</span>
-                        <span style={{ color: "#00e676", fontSize: "0.65rem" }}>READY</span>
-                      </div>
-                      <div className="hdux-landing__player-row">
-                        <span className="hdux-landing__dot" style={{ background: "#ff1744" }} />
-                        <span className="hdux-landing__player-name" style={{ color }}>GHOST_0x7F</span>
-                        <span className="hdux-landing__player-stat">2790 MMR</span>
-                        <span style={{ color: "#ff1744", fontSize: "0.65rem" }}>WAITING</span>
-                      </div>
-                      <div className="hdux-landing__player-row">
-                        <span className="hdux-landing__dot" style={{ background: "#ff6f00" }} />
-                        <span className="hdux-landing__player-name" style={{ color }}>UNIT_NULL</span>
-                        <span className="hdux-landing__player-stat">2650 MMR</span>
-                        <span style={{ color: "#ff6f00", fontSize: "0.65rem" }}>LOADING</span>
-                      </div>
-                    </div>
-                  )}
-                  {i === 2 && (
-                    <div className="hdux-landing__feature-demo hdux-landing__feature-demo--gauges">
-                      <RadialMeter value={Math.round(gaugeValues[0])} label="POWER" size={68} />
-                      <RadialMeter value={Math.round(gaugeValues[1])} label="SHIELD" size={68} color="#7b2fff" />
-                    </div>
-                  )}
+        {features && (
+          <section className="hdux-landing__section hdux-landing__features">
+            {features.map((feature) => (
+              <Box key={feature.label} animation="standard" hasLoaded={featuresLoaded} fullBorder className="hdux-landing__feature-box">
+                <div className="hdux-landing__component-card">
+                  {feature.stat && <span className="hdux-landing__tag">{feature.stat}</span>}
+                  <Text variant="h5">{feature.label}</Text>
+                  <Text variant="body">{feature.description}</Text>
                 </div>
               </Box>
             ))}
           </section>
+        )}
 
-          {/* ── Pro CTA ──────────────────────────────────────── */}
-          <section className="hdux-landing__cta-section">
-            <Box animation="horizontalFirst" hasLoaded={loaded} fullBorder className="hdux-landing__cta-box">
-              <div className="hdux-landing__cta-inner">
-                <div className="hdux-landing__cta-left">
-                  <Text variant="h3" animation="print">HDUX PRO</Text>
-                  <Text variant="body" className="hdux-landing__cta-desc">
-                    Advanced data-viz HUD widgets, full-page dashboard &amp; game-UI templates,
-                    and priority updates — one license, unlimited projects.
-                  </Text>
-                  <ul className="hdux-landing__cta-list">
-                    {["AreaChart (multi-series)", "DataGrid (sort/filter/page)", "GaugeCluster", "OpsDashboard template", "GameLobby template", "LandingPage template"].map((item) => (
-                      <li key={item} className="hdux-landing__cta-item">
-                        <span className="hdux-landing__cta-tick" style={{ color }}>▸</span>
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                <div className="hdux-landing__cta-right" aria-busy={pending}>
-                  <div className="hdux-landing__price-badge" style={{ borderColor: color }}>
-                    <span className="hdux-landing__price-label">ONE-TIME</span>
-                    <span className="hdux-landing__price-value" style={{ color }}>PRO LICENSE</span>
-                    <span className="hdux-landing__price-note">Unlimited projects</span>
-                  </div>
-                  <Button onClick={() => void handleCta()} color={color} disabled={pending}>
-                    {pending ? "LOADING…" : ctaLabel}
-                  </Button>
+        {/* ── Free Components Showcase ────────────────────────────── */}
+        <section className="hdux-landing__section">
+          <div className="hdux-landing__section-header">
+            <span className="hdux-landing__section-title">FREE COMPONENTS</span>
+            <div className="hdux-landing__section-divider" />
+          </div>
+
+          <div className="hdux-landing__component-grid">
+            {/* Box */}
+            <Box animation="horizontalFirst" hasLoaded={featuresLoaded} fullBorder>
+              <div className="hdux-landing__component-card">
+                <div className="hdux-landing__component-name">BOX</div>
+                <div className="hdux-landing__component-demo">
+                  <Text variant="body" animation="print">SUBSYSTEM ONLINE</Text>
+                  <Text variant="body">CORNER-ANIMATED CONTAINER</Text>
                 </div>
               </div>
             </Box>
-          </section>
 
-        </div>
+            {/* Text animations */}
+            <Box animation="verticalFirst" hasLoaded={featuresLoaded} fullBorder>
+              <div className="hdux-landing__component-card">
+                <div className="hdux-landing__component-name">TEXT</div>
+                <div className="hdux-landing__component-demo">
+                  <Text variant="h6" animation="print">TYPEWRITER EFFECT</Text>
+                  <Text variant="body" animation="sweep">SWEEP REVEAL EFFECT</Text>
+                </div>
+              </div>
+            </Box>
 
-        {checkoutError && <p role="alert" className="hdux-landing__checkout-error">{checkoutError}</p>}
+            {/* StatBar */}
+            <Box animation="standard" hasLoaded={featuresLoaded} fullBorder>
+              <div className="hdux-landing__component-card">
+                <div className="hdux-landing__component-name">STAT BAR</div>
+                <div className="hdux-landing__component-demo">
+                  <StatBar label="HULL" value={78} showValue="percent" height={6} />
+                  <StatBar label="SHIELD" value={45} color="var(--hdux-demo-purple, #7b2fff)" showValue="percent" height={6} />
+                  <StatBar label="POWER" value={92} color="var(--hdux-demo-green, #00e676)" showValue="percent" height={6} />
+                </div>
+              </div>
+            </Box>
+
+            {/* RadialMeter */}
+            <Box animation="standard" hasLoaded={featuresLoaded} fullBorder>
+              <div className="hdux-landing__component-card">
+                <div className="hdux-landing__component-name">RADIAL METER</div>
+                <div className="hdux-landing__component-demo" style={{ flexDirection: "row", gap: "12px", alignItems: "center" }}>
+                  <RadialMeter value={68} label="CPU" size={72} />
+                  <RadialMeter value={82} label="MEM" color="var(--hdux-demo-purple, #7b2fff)" size={72} />
+                </div>
+              </div>
+            </Box>
+
+            {/* Button */}
+            <Box animation="horizontalFirst" hasLoaded={featuresLoaded} fullBorder>
+              <div className="hdux-landing__component-card">
+                <div className="hdux-landing__component-name">BUTTON</div>
+                <div className="hdux-landing__component-demo" style={{ gap: "8px" }}>
+                  <Button>PRIMARY ACTION</Button>
+                  <Button color="var(--hdux-demo-purple, #7b2fff)">SECONDARY</Button>
+                </div>
+              </div>
+            </Box>
+
+            {/* Theme */}
+            <Box animation="verticalFirst" hasLoaded={featuresLoaded} fullBorder>
+              <div className="hdux-landing__component-card">
+                <div className="hdux-landing__component-name">THEME SELECTOR</div>
+                <div className="hdux-landing__component-demo" style={{ alignItems: "center", justifyContent: "center" }}>
+                  <ThemeSelector size={48} />
+                  <Text variant="body">LIGHT / DARK / CUSTOM</Text>
+                </div>
+              </div>
+            </Box>
+          </div>
+        </section>
+
+        {/* ── Pro Components Showcase ──────────────────────────────── */}
+        <section className="hdux-landing__section">
+          <div className="hdux-landing__pro-header">
+            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+              <span className="hdux-landing__section-title">HDUX PRO</span>
+              <span className="hdux-landing__pro-badge">UNLOCK ALL</span>
+            </div>
+            <BuyButton checkout={checkout} label={ctaLabel} />
+          </div>
+
+          {/* Full-width area chart */}
+          <Box animation="horizontalFirst" hasLoaded={proLoaded} fullBorder className="hdux-landing__chart-full">
+            <AreaChart
+              title="LIVE TELEMETRY"
+              series={[
+                {
+                  id: "cpu",
+                  label: "CPU %",
+                  data: history.cpu.map((v, i) => ({ value: v, label: LIVE_LABELS[i] })),
+                  color: "var(--hdux-demo-cyan, #00d4ff)",
+                },
+                {
+                  id: "mem",
+                  label: "MEM %",
+                  data: history.mem.map((v, i) => ({ value: v, label: LIVE_LABELS[i] })),
+                  color: "var(--hdux-demo-purple, #7b2fff)",
+                },
+                {
+                  id: "net",
+                  label: "NET %",
+                  data: history.net.map((v, i) => ({ value: v, label: LIVE_LABELS[i] })),
+                  color: "var(--hdux-demo-green, #00e676)",
+                },
+              ]}
+              width={900}
+              height={200}
+              showGrid
+              animate
+            />
+          </Box>
+
+          <div className="hdux-landing__pro-grid">
+            <Box animation="standard" hasLoaded={proLoaded} fullBorder>
+              <GaugeCluster
+                title="SYSTEM VITALS"
+                gauges={[
+                  { label: "CPU",  value: history.gauges[0] },
+                  { label: "MEM",  value: history.gauges[1] },
+                  { label: "DISK", value: history.gauges[2] },
+                  { label: "NET",  value: history.gauges[3] },
+                ]}
+                columns={2}
+                gaugeSize={80}
+              />
+            </Box>
+
+            <Box animation="verticalFirst" hasLoaded={proLoaded} fullBorder>
+              <DataGrid<DocsRow>
+                columns={DOCS_COLUMNS}
+                rows={DOCS_ROWS}
+                pageSize={5}
+                searchable
+              />
+            </Box>
+          </div>
+        </section>
+
+        {/* ── Templates ────────────────────────────────────────────── */}
+        <section className="hdux-landing__section">
+          <div className="hdux-landing__section-header">
+            <span className="hdux-landing__section-title">PRO TEMPLATES</span>
+            <div className="hdux-landing__section-divider" />
+          </div>
+
+          <div className="hdux-landing__templates-grid">
+            <Box animation="standard" hasLoaded={proLoaded} fullBorder>
+              <div className="hdux-landing__template-card">
+                <Text variant="h6" animation="print">OPS DASHBOARD</Text>
+                <div className="hdux-landing__template-desc">
+                  Full-page operational dashboard with live gauge cluster, multi-series area charts, and a searchable event log. Drop-in for monitoring, DevOps, and industrial UIs.
+                </div>
+                <div className="hdux-landing__template-tags">
+                  <span className="hdux-landing__tag">GAUGES</span>
+                  <span className="hdux-landing__tag">CHARTS</span>
+                  <span className="hdux-landing__tag">EVENT LOG</span>
+                </div>
+              </div>
+            </Box>
+
+            <Box animation="standard" hasLoaded={proLoaded} fullBorder>
+              <div className="hdux-landing__template-card">
+                <Text variant="h6" animation="print">GAME LOBBY</Text>
+                <div className="hdux-landing__template-desc">
+                  Competitive multiplayer lobby with team roster, ready states, live countdown, and MMR readout. Plug in your own player data and callbacks.
+                </div>
+                <div className="hdux-landing__template-tags">
+                  <span className="hdux-landing__tag">TEAMS</span>
+                  <span className="hdux-landing__tag">COUNTDOWN</span>
+                  <span className="hdux-landing__tag">READY STATE</span>
+                </div>
+              </div>
+            </Box>
+
+            <Box animation="standard" hasLoaded={proLoaded} fullBorder>
+              <div className="hdux-landing__template-card">
+                <Text variant="h6" animation="print">LANDING PAGE</Text>
+                <div className="hdux-landing__template-desc">
+                  This page. A full marketing site template for HUD-aesthetic products. Hero, component showcase, pricing, and CTA — all wired to the HDUX design system.
+                </div>
+                <div className="hdux-landing__template-tags">
+                  <span className="hdux-landing__tag">HERO</span>
+                  <span className="hdux-landing__tag">SHOWCASE</span>
+                  <span className="hdux-landing__tag">PRICING</span>
+                </div>
+              </div>
+            </Box>
+          </div>
+        </section>
+
+        {/* ── Pricing ──────────────────────────────────────────────── */}
+        <section className="hdux-landing__section">
+          <div className="hdux-landing__section-header">
+            <span className="hdux-landing__section-title">PRICING</span>
+            <div className="hdux-landing__section-divider" />
+          </div>
+
+          <div className="hdux-landing__pricing-grid">
+            {/* Free tier */}
+            <Box animation="horizontalFirst" hasLoaded={proLoaded} fullBorder>
+              <div className="hdux-landing__pricing-card">
+                <div className="hdux-landing__pricing-tier">BASE</div>
+                <div className="hdux-landing__pricing-price">
+                  FREE <small>MIT LICENSE</small>
+                </div>
+                <ul className="hdux-landing__pricing-features">
+                  {FREE_TIER.map((f) => <li key={f}>{f}</li>)}
+                </ul>
+                <div className="hdux-landing__pricing-cta">
+                  <Button
+                    disabled={!safeUrl(freeUrl)}
+                    onClick={() => { const url = safeUrl(freeUrl); if (url) window.open(url, "_blank", "noopener,noreferrer"); }}
+                  >
+                    GET HDUX FREE
+                  </Button>
+                  {!safeUrl(freeUrl) && <span role="status">Free download unavailable: configure a valid HTTP(S) destination.</span>}
+                </div>
+              </div>
+            </Box>
+
+            {/* Pro tier */}
+            <Box animation="horizontalFirst" hasLoaded={proLoaded} fullBorder>
+              <div className="hdux-landing__pricing-card">
+                <div className="hdux-landing__pricing-tier">PRO</div>
+                <div className="hdux-landing__pricing-price">
+                  ONE-TIME <small>COMMERCIAL LICENSE</small>
+                </div>
+                <ul className="hdux-landing__pricing-features">
+                  {FREE_TIER.map((f) => <li key={f}>{f}</li>)}
+                  {PRO_FEATURES.map((f) => <li key={f} className="pro">{f}</li>)}
+                </ul>
+                <div className="hdux-landing__pricing-cta">
+                  <BuyButton checkout={checkout} label={ctaLabel} />
+                </div>
+              </div>
+            </Box>
+          </div>
+        </section>
 
         <SupportFunding />
 
+        {/* ── Footer ───────────────────────────────────────────────── */}
         <BottomBar static>
           <BarLeft>
             <BarElement>
-              <Text variant="body">{brandName} · OPEN CORE</Text>
+              <Text variant="body">HDUX — HAMILTON DYNAMIC</Text>
             </BarElement>
           </BarLeft>
           <BarRight>
             <BarElement>
-              <Text variant="body">MIT LICENSE</Text>
+              <span className="hdux-landing__status-ticker">ALL SYSTEMS OPERATIONAL</span>
             </BarElement>
           </BarRight>
         </BottomBar>
       </div>
     </HduxThemeProvider>
-  );
-}
-
-export function LandingPage(props: LandingPageProps) {
-  return (
-    <ProGate componentName="LandingPage">
-      <LandingPageInner {...props} />
-    </ProGate>
   );
 }

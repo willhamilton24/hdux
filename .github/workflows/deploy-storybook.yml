@@ -34,6 +34,8 @@ jobs:
           path: storybook-static
 
   deploy:
+    # Deployment switch OFF. Operator must explicitly change this before publication.
+    if: ${{ false }}
     needs: build
     runs-on: ubuntu-latest
     environment:

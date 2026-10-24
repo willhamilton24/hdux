@@ -5,16 +5,18 @@ import { validateLicense } from "./validateLicense";
 export interface HduxProProviderProps {
   /**
    * Your HDUX Pro license key. Format: `HDUX-PRO-XXXX-XXXX-XXXX-XXXX`.
-   * Obtain one at https://hdux.dev/pro
+   * Obtain one through the host application’s configured checkout.
    */
   licenseKey: string;
   /** Company Stripe test Payment Link, separate from the Pro product. */
   supportPaymentLink?: string;
   /**
    * Override the validation endpoint (useful for self-hosted deployments).
-   * Defaults to `https://api.hdux.dev/v1/license/validate`.
+   * Supply the endpoint derived from the host application’s SERVICE_URL.
    */
   validationUrl?: string;
+  /** Browser GET checkout endpoint derived from the host’s SERVICE_URL. */
+  checkoutUrl?: string;
   children: ReactNode;
 }
 
@@ -26,6 +28,7 @@ export function HduxProProvider({
   licenseKey,
   validationUrl,
   supportPaymentLink,
+  checkoutUrl,
   children,
 }: HduxProProviderProps) {
   const [status, setStatus] = useState<ProLicenseStatus>(
@@ -45,7 +48,7 @@ export function HduxProProvider({
   }, [licenseKey, validationUrl]);
 
   return (
-    <HduxProContext.Provider value={{ status, licenseKey, supportPaymentLink }}>
+    <HduxProContext.Provider value={{ status, licenseKey, supportPaymentLink, checkoutUrl }}>
       {children}
     </HduxProContext.Provider>
   );

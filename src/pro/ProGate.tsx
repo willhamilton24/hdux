@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import { useProLicense } from "./ProContext";
 import "./ProGate.css";
 import { SupportFunding } from "./SupportFunding";
@@ -8,46 +8,16 @@ interface ProGateProps {
   children: ReactNode;
 }
 
-const CHECKOUT_ENDPOINT = "https://api.hdux.dev/v1/checkout/session";
-
 function BuyButton() {
-  const [loading, setLoading] = useState(false);
-
-  const handleBuy = async () => {
-    setLoading(true);
-    try {
-      const here = typeof window !== "undefined" ? window.location.href : "https://hdux.dev";
-      const res = await fetch(CHECKOUT_ENDPOINT, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cancel_url: here }),
-      });
-      if (!res.ok) {
-        throw new Error(`Checkout request failed: ${res.status}`);
-      }
-      const data = (await res.json()) as { url?: string };
-      if (data.url && typeof window !== "undefined") {
-        window.location.href = data.url;
-      }
-    } catch {
-      // Swallow and fall through to re-enable the button
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="hdux-pro-gate__buttons">
-      <button
-        className="hdux-pro-gate__buy"
-        onClick={() => void handleBuy()}
-        disabled={loading}
-      >
-        {loading ? "LOADING…" : "BUY HDUX PRO →"}
-      </button>
-      <SupportFunding />
-    </div>
-  );
+  const { checkoutUrl } = useProLicense();
+  if (!checkoutUrl) return null;
+  try {
+    const url = new URL(checkoutUrl);
+    if (url.username || url.password || !(url.protocol === "https:" ||
+      (url.protocol === "http:" && ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname)))) return null;
+  } catch { return null; }
+  // Top-level navigation uses the service's GET route, without cross-origin fetch.
+  return <a className="hdux-pro-gate__buy" href={checkoutUrl}>BUY HDUX PRO →</a>;
 }
 
 /**
@@ -80,7 +50,12 @@ export function ProGate({ componentName, children }: ProGateProps) {
         <div className="hdux-pro-gate__badge">
           <span className="hdux-pro-gate__title">{message}</span>
           {sub && <span className="hdux-pro-gate__sub">{sub}</span>}
-          {status !== "validating" && <BuyButton />}
+          {status !== "validating" && (
+            <div className="hdux-pro-gate__buttons">
+              <BuyButton />
+              <SupportFunding />
+            </div>
+          )}
         </div>
       </div>
     </div>
