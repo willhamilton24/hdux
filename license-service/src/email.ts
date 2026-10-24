@@ -21,7 +21,8 @@ export async function sendLicenseEmail(to: string, key: string): Promise<void> {
     console.warn('SMTP not configured — skipping license email to', to);
     return;
   }
-  const from = process.env.EMAIL_FROM ?? 'HDUX Pro <noreply@hdux.dev>';
+  const from = process.env.EMAIL_FROM;
+  if (!from) throw new Error('EMAIL_FROM must be configured');
   await t.sendMail({
     from,
     to,
@@ -39,7 +40,6 @@ export async function sendLicenseEmail(to: string, key: string): Promise<void> {
       '    {/* your app */}',
       '  </HduxProProvider>',
       '',
-      'Documentation: https://hdux.dev',
     ].join('\n'),
     html: `<!DOCTYPE html>
 <html lang="en">
@@ -53,7 +53,6 @@ export async function sendLicenseEmail(to: string, key: string): Promise<void> {
 &lt;HduxProProvider licenseKey="${key}"&gt;
   {/* your app */}
 &lt;/HduxProProvider&gt;</pre>
-  <p style="margin-top:32px"><a href="https://hdux.dev" style="color:#00d4ff">hdux.dev</a></p>
 </body>
 </html>`,
   });

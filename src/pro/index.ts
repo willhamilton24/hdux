@@ -1,5 +1,5 @@
 // HDUX Pro — requires a valid license key
-// Get one at https://hdux.dev/pro
+// Configure checkout through the host application.
 
 // License system
 export { HduxProProvider } from "./ProProvider";

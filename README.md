@@ -293,11 +293,46 @@ function App() {
 
 ### Purchasing a License
 
-**[Buy HDUX Pro →](https://api.hdux.dev/v1/checkout/session)** — opens a Stripe Checkout page. Your license key is emailed to you after payment and shown on the confirmation page. Pro components without a provider also display an inline "Buy HDUX Pro →" button that goes directly to checkout.
+Public purchasing is not active. The service implements `GET /v1/checkout/session`
+(browser navigation with a 303 redirect) and `POST /v1/checkout/session`
+(JSON `{ "url": "…" }`) for the provisioned Pro price. The Pro gate accepts a
+`checkoutUrl` on `HduxProProvider`; derive it from the host application's configured
+`SERVICE_URL`. Without configuration, no purchase link is displayed. Browser links
+use GET; server or same-origin integrations may POST, check the response status and
+hosted Stripe URL, then navigate to it. No cross-origin fetch setup is required for GET.
 
 ### License Key
 
-Wrap your app (or any subtree) in `<HduxProProvider licenseKey="…">`. The key is validated once on mount against `https://api.hdux.dev/v1/license/validate`. If the service is unreachable, any well-formed key (`HDUX-PRO-XXXX-XXXX-XXXX-XXXX`) is accepted as a fallback. Pro components without a valid provider show a gate overlay instead of the component.
+Pass `validationUrl` on `HduxProProvider`, derived from `SERVICE_URL` plus
+`/v1/license/validate`. Validation fails closed if unconfigured or unreachable.
+
+## Support HDUX
+
+Optional support is implemented separately from Pro licensing using the company's
+shared Stripe account **in test mode only**. `GET /v1/support/checkout` opens a
+hosted Checkout for a fixed, one-time **$5 USD contribution**, with no Pro license
+or other entitlement. `POST /v1/support/checkout` returns a checkout URL for
+same-origin integrations. Support sessions carry `hdux-support` metadata; the
+license webhook only issues keys for paid test sessions marked `hdux-pro` with
+the Pro price. The contribution uses inline Stripe price data, so no additional
+account or provisioned price is required.
+
+Configure the service privately with `STRIPE_SECRET_KEY` (`sk_test_` only),
+`STRIPE_PRICE_ID` (Pro), `SERVICE_URL` (service origin), and optionally `APP_URL`
+(application return URL, defaults to `SERVICE_URL`). URLs must use HTTPS, except
+loopback HTTP for local checks. Checkout accepts only an optional email and
+`success_url`/`cancel_url` on these configured origins; amounts and prices cannot
+be supplied by clients. `DATABASE_URL` and `STRIPE_WEBHOOK_SECRET` remain required
+for license issuance; SMTP configuration and `EMAIL_FROM` enable email delivery.
+
+There is no assigned public domain or active support destination. Funding metadata
+is omitted until public activation is authorized and verified. Do not publish
+checkout links, deploy services, register public webhooks, or enable publication
+while the deployment switch is OFF. `render.yaml` disables automatic deployment;
+the Pages deployment and npm publishing jobs are explicitly disabled. Local code
+and mocked tests are complete; real test-payment verification and any public
+activation remain pending. Hosted redirects follow the
+[Stripe Checkout Sessions API](https://docs.stripe.com/api/checkout/sessions).
 
 ## License
 
@@ -307,15 +342,16 @@ MIT
 Open-core npm library: free base components drive adoption, paid "pro" pack (data-viz HUD widgets, dashboards, game-UI templates) sold with license keys.
 
 ### Release TODOs
-- [x] Publish v0.1 to npm and deploy the Storybook (GitHub Action already exists) as a public docs/demo site
+- [ ] Public npm/Storybook activation — disabled pending operator authorization
 - [x] Expand the component set beyond Box/Text/Bars — inputs, tables, modals, and HUD-style charts are what paying users need
 - [x] Create a paid Pro tier (advanced widgets + templates) gated by license key, sold via the shared Stripe + license-service stack (Stripe product/price provisioned)
-- [x] Stand up the license service (`api.hdux.dev/v1/license/validate` has no backend): a small web service + `render.yaml` that issues keys from the Stripe checkout webhook and validates them on request
+- [x] Implement the private license service and Render configuration; public deployment remains pending
 - [x] Close the free-Pro hole: `src/pro/validateLicense.ts` accepts any well-formed key when the service is unreachable — fail closed (or use signed offline keys) once the license service exists
-- [x] Add a "Buy HDUX Pro" checkout path (Stripe Checkout session against the provisioned price) linked from README and the Pro gate overlay, delivering the license key by email
+- [x] Implement Pro checkout and configurable gate navigation, with webhook license issuance and optional email delivery; public activation remains pending
 - [ ] Run a Stripe test-mode E2E check: checkout → webhook → key issued → `validateLicense` accepts the key and rejects a revoked one
 - [x] Build 2-3 polished full-page demo templates (ops dashboard, game lobby, landing page) as the visual sales pitch
-- [ ] Add GitHub Sponsors/Polar funding links as a secondary revenue channel
+- [x] Implement separate optional Stripe test-mode support checkout and configuration documentation
+- [ ] Verify a completed support test payment; activate a public support destination and funding metadata only after the operator enables deployment
 - [ ] Launch posts with animation GIFs on r/reactjs, Hacker News, and X; submit to component-library directories (waits on the deployment switch)
 - [ ] Archive HDUI-Prototype with a pointer here so traffic consolidates on one repo (migration docs drafted; archiving the public repo and pointing its traffic here waits on the deployment switch)
 

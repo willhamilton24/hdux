@@ -2,6 +2,7 @@ services:
   - type: web
     name: hdux-license-service
     runtime: node
+    autoDeploy: false
     region: ohio
     plan: starter
     buildCommand: cd license-service && npm install && npm run build
@@ -13,7 +14,9 @@ services:
       - key: STRIPE_PRICE_ID
         value: price_1UStJ7GRjKD6n9dmqdwh3trU
       - key: SERVICE_URL
-        value: https://api.hdux.dev
+        sync: false
+      - key: APP_URL
+        sync: false
       - key: DATABASE_URL
         sync: false
       - key: STRIPE_SECRET_KEY
