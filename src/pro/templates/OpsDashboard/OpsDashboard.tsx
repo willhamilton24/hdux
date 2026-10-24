@@ -8,6 +8,7 @@ import { GaugeCluster } from "../../components/GaugeCluster";
 import { DataGrid } from "../../components/DataGrid";
 import { ProGate } from "../../ProGate";
 import type { OpsDashboardProps, OpsMetric } from "./types";
+import "../templates.css";
 import "./OpsDashboard.css";
 
 const DEFAULT_METRICS = [
@@ -18,10 +19,13 @@ const DEFAULT_METRICS = [
 ];
 
 const DEFAULT_LABELS = ["T-7", "T-6", "T-5", "T-4", "T-3", "T-2", "T-1", "NOW"];
-const DEFAULT_SERIES = [
-  { label: "CPU %", data: [22, 35, 55, 48, 68, 72, 60, 68], color: "#00d4ff" },
-  { label: "MEM %", data: [60, 65, 70, 72, 75, 80, 82, 82], color: "#7b2fff" },
-];
+// Invalid maxima use the same 100-unit fallback for rendering and thresholds.
+function metricMax(metric: OpsMetric) {
+  return Number.isFinite(metric.max) && metric.max! > 0 ? metric.max! : 100;
+}
+function metricRatio(metric: OpsMetric) {
+  return metric.value / metricMax(metric);
+}
 
 const SEED_ROWS = [
   { id: 1, time: "14:22:01", level: "INFO",  service: "api-gateway",  message: "Health check OK" },
@@ -43,10 +47,10 @@ const LOG_COLUMNS = [
     sortable: true,
     render: (val: unknown) => {
       const colors: Record<string, string> = {
-        ERROR: "#ff1744", WARN: "#ff6f00", INFO: "#00d4ff", DEBUG: "#7b2fff",
+        ERROR: "var(--hdux-demo-red, #ff1744)", WARN: "var(--hdux-demo-orange, #ff6f00)", INFO: "var(--hdux-demo-cyan, #00d4ff)", DEBUG: "var(--hdux-demo-purple, #7b2fff)",
       };
       return (
-        <span style={{ color: colors[val as string] ?? "#00d4ff", fontSize: "0.65rem", letterSpacing: "0.12em" }}>
+        <span style={{ color: colors[val as string] ?? "var(--hdux-demo-cyan, #00d4ff)", fontSize: "0.65rem", letterSpacing: "0.12em" }}>
           {val as string}
         </span>
       );
@@ -128,8 +132,8 @@ function useOpsDashboardLiveData(
 
   const metrics = externalMetrics ?? liveMetrics;
   const chartSeries = externalSeries ?? [
-    { label: "CPU %", data: liveHistory.cpu, color: "#00d4ff" },
-    { label: "MEM %", data: liveHistory.mem, color: "#7b2fff" },
+    { label: "CPU %", data: liveHistory.cpu, color: "var(--hdux-demo-cyan, #00d4ff)" },
+    { label: "MEM %", data: liveHistory.mem, color: "var(--hdux-demo-purple, #7b2fff)" },
   ];
   const chartLabels = externalLabels ?? DEFAULT_LABELS;
   const tableRows = externalRows ? (externalRows as LogRow[]) : liveRows;
@@ -140,7 +144,7 @@ function useOpsDashboardLiveData(
     String(uptimeSec % 60).padStart(2, "0"),
   ].join(":");
 
-  const hasAlert = metrics.some((m) => (m.value ?? 0) > 88);
+  const hasAlert = metrics.some((m) => metricRatio(m) > 0.88);
 
   return { metrics, chartSeries, chartLabels, tableRows, uptimeStr, hasAlert };
 }
@@ -183,14 +187,14 @@ function OpsDashboardInner({
         className={["hdux-ops-dashboard", className].filter(Boolean).join(" ")}
         style={style}
       >
-        <TopBar>
+        <TopBar static>
           <BarLeft>
             <BarElement>
               <Text variant="body">{systemName}</Text>
             </BarElement>
             {hasAlert && (
-              <BarElement color="#ff1744">
-                <Text variant="body" color="#ff1744">⚠ ALERT</Text>
+              <BarElement color="var(--hdux-demo-red, #ff1744)">
+                <Text variant="body" color="var(--hdux-demo-red, #ff1744)">⚠ ALERT</Text>
               </BarElement>
             )}
           </BarLeft>
@@ -213,10 +217,10 @@ function OpsDashboardInner({
                 gauges={metrics.map((m) => ({
                   label: m.label,
                   value: m.value,
-                  max: m.max ?? 100,
+                  max: metricMax(m),
                   color:
                     m.color ??
-                    (m.value > 88 ? "#ff1744" : m.value > 70 ? "#ff6f00" : undefined),
+                    (metricRatio(m) > 0.88 ? "var(--hdux-demo-red, #ff1744)" : metricRatio(m) > 0.70 ? "var(--hdux-demo-orange, #ff6f00)" : undefined),
                   formatValue: m.unit ? (v) => `${v}${m.unit}` : undefined,
                 }))}
                 columns={2}
@@ -260,7 +264,7 @@ function OpsDashboardInner({
               <Text variant="body">HDUX PRO</Text>
             </BarElement>
             <BarElement>
-              <Text variant="body" color={hasAlert ? "#ff1744" : "#00e676"}>
+              <Text variant="body" color={hasAlert ? "var(--hdux-demo-red, #ff1744)" : "var(--hdux-demo-green, #00e676)"}>
                 {hasAlert ? "DEGRADED" : "OPERATIONAL"}
               </Text>
             </BarElement>

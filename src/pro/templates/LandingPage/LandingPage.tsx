@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { HduxThemeProvider } from "../../../theme/ThemeProvider";
 import {
   TopBar, BottomBar,
@@ -14,9 +14,17 @@ import { AreaChart } from "../../components/AreaChart";
 import { GaugeCluster } from "../../components/GaugeCluster";
 import { DataGrid } from "../../components/DataGrid";
 import type { LandingPageProps } from "./types";
+import "../templates.css";
 import "./LandingPage.css";
 
-const CHECKOUT_ENDPOINT = "https://api.hdux.dev/v1/checkout/session";
+// Only absolute HTTP(S) destinations are accepted, including loopback development services.
+function safeUrl(value: unknown): string | undefined {
+  if (typeof value !== "string") return;
+  try {
+    const url = new URL(value);
+    if (["https:", "http:"].includes(url.protocol) && !url.username && !url.password) return url.href;
+  } catch { /* Invalid configuration or response. */ }
+}
 
 const LIVE_LABELS = ["T-7", "T-6", "T-5", "T-4", "T-3", "T-2", "T-1", "NOW"];
 
@@ -105,7 +113,7 @@ const DOCS_COLUMNS = [
     header: "STATUS",
     width: 80,
     render: (val: unknown) => (
-      <span style={{ color: val === "stable" ? "#00e676" : "#ff6f00", fontSize: "0.65rem", letterSpacing: "0.12em" }}>
+      <span style={{ color: val === "stable" ? "var(--hdux-demo-green, #00e676)" : "var(--hdux-demo-orange, #ff6f00)", fontSize: "0.65rem", letterSpacing: "0.12em" }}>
         {String(val).toUpperCase()}
       </span>
     ),
@@ -113,39 +121,65 @@ const DOCS_COLUMNS = [
   { key: "since" as const, header: "SINCE", width: 60 },
 ];
 
-function BuyButton({ proUrl }: { proUrl?: string }) {
+function BuyButton({ proUrl, serviceUrl }: Pick<LandingPageProps, "proUrl" | "serviceUrl">) {
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const messageId = useId();
+  const destination = safeUrl(proUrl);
+  const service = safeUrl(serviceUrl);
+  const unavailable = proUrl !== undefined
+    ? (!destination ? "Checkout unavailable: configure a valid HTTP(S) Pro destination." : "")
+    : (!service ? "Checkout unavailable: the app must configure a service URL." : "");
 
   const handleBuy = async () => {
-    if (proUrl) {
-      window.location.href = proUrl;
+    if (loading || unavailable) return;
+    setError("");
+    if (destination) {
+      window.location.assign(destination);
       return;
     }
     setLoading(true);
     try {
-      const res = await fetch(CHECKOUT_ENDPOINT, {
+      // Reuse the existing Stripe license-service checkout route.
+      const res = await fetch(`${service!.replace(/\/$/, "")}/v1/checkout/session`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cancel_url: typeof window !== "undefined" ? window.location.href : "" }),
+        body: JSON.stringify({ cancel_url: window.location.href }),
+        signal: AbortSignal.timeout(15000),
       });
-      if (!res.ok) throw new Error("checkout failed");
-      const data = (await res.json()) as { url?: string };
-      if (data.url) window.location.href = data.url;
-    } catch {
-      // ignore
+      if (!res.ok) throw new Error(`Checkout failed (HTTP ${res.status}). Please retry.`);
+      let data: unknown;
+      try { data = await res.json(); }
+      catch { throw new Error("Checkout returned malformed data. Please retry."); }
+      if (!data || typeof data !== "object" || !("url" in data) || !data.url) {
+        throw new Error("Checkout returned no destination URL. Please retry.");
+      }
+      const redirect = safeUrl(data.url);
+      if (!redirect) throw new Error("Checkout returned an unsafe or invalid URL. Please retry.");
+      window.location.assign(redirect);
+    } catch (cause) {
+      setError(cause instanceof Error && cause.message.startsWith("Checkout")
+        ? cause.message : "Unable to connect to checkout. Please retry.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <button
-      className="hdux-landing__buy-btn"
-      onClick={() => void handleBuy()}
-      disabled={loading}
-    >
-      {loading ? "LOADING…" : "BUY HDUX PRO →"}
-    </button>
+    <div className="hdux-landing__checkout">
+      <button
+        className="hdux-landing__buy-btn"
+        onClick={() => void handleBuy()}
+        disabled={loading || !!unavailable}
+        aria-describedby={messageId}
+        aria-busy={loading}
+      >
+        {loading ? "LOADING…" : error ? "RETRY CHECKOUT →" : "BUY HDUX PRO →"}
+      </button>
+      <span id={messageId} role={error ? "alert" : "status"} className="hdux-landing__checkout-message">
+        {error || unavailable}
+      </span>
+    </div>
   );
 }
 
@@ -153,8 +187,9 @@ export function LandingPage({
   productName = "HDUX",
   tagline = "THE HUD FRAMEWORK FOR REACT",
   subTagline = "Sci-fi HUD components for dashboards, games, and tools. Free base library — Pro tier unlocks charts, grids, and full-page templates.",
-  freeUrl = "https://github.com/hamiltondynamic/hdux",
+  freeUrl,
   proUrl,
+  serviceUrl,
   className,
   style,
 }: LandingPageProps) {
@@ -196,9 +231,9 @@ export function LandingPage({
           borderWidth: "1px",
           boxCorners: { length: "16px", width: "2px" },
         },
-        light:  { mainColor: "#0a3a5c", background: "#f4f6f8", textColor: "#0a0a0a" },
+        light:  { mainColor: "#0a3a5c", background: "#f4f6f8", textColor: "#0a0a0a", customColors: { success: "#08783c", caution: "#a04400", failure: "#c91636" } },
         dark:   { mainColor: "#00d4ff", background: "#06080f", textColor: "#e0e0e0" },
-        custom: { mainColor: "#7b2fff", background: "#08030f", textColor: "#e0d4ff" },
+        custom: { mainColor: "#ad85ff", background: "#08030f", textColor: "#e0d4ff" },
         transitionDuration: "350ms",
       }}
     >
@@ -207,7 +242,7 @@ export function LandingPage({
         style={style}
       >
         {/* ── Top Navigation ─────────────────────────────────────── */}
-        <TopBar>
+        <TopBar static>
           <BarLeft>
             <BarElement>
               <Text variant="body">{productName}</Text>
@@ -223,7 +258,7 @@ export function LandingPage({
               <ThemeSelector size={26} />
             </BarElement>
             <BarElement>
-              <BuyButton proUrl={proUrl} />
+              <BuyButton proUrl={proUrl} serviceUrl={serviceUrl} />
             </BarElement>
           </BarRight>
         </TopBar>
@@ -241,11 +276,13 @@ export function LandingPage({
                 </Text>
                 <div className="hdux-landing__hero-ctas" style={{ marginTop: "28px" }}>
                   <Button
-                    onClick={() => { if (freeUrl) window.open(freeUrl, "_blank"); }}
+                    disabled={!safeUrl(freeUrl)}
+                    onClick={() => { const url = safeUrl(freeUrl); if (url) window.open(url, "_blank", "noopener,noreferrer"); }}
                   >
                     GET HDUX FREE
                   </Button>
-                  <BuyButton proUrl={proUrl} />
+                  {!safeUrl(freeUrl) && <span role="status">Free download unavailable: configure a valid HTTP(S) destination.</span>}
+                  <BuyButton proUrl={proUrl} serviceUrl={serviceUrl} />
                 </div>
 
                 <div className="hdux-landing__hero-stats">
@@ -307,8 +344,8 @@ export function LandingPage({
                 <div className="hdux-landing__component-name">STAT BAR</div>
                 <div className="hdux-landing__component-demo">
                   <StatBar label="HULL" value={78} showValue="percent" height={6} />
-                  <StatBar label="SHIELD" value={45} color="#7b2fff" showValue="percent" height={6} />
-                  <StatBar label="POWER" value={92} color="#00e676" showValue="percent" height={6} />
+                  <StatBar label="SHIELD" value={45} color="var(--hdux-demo-purple, #7b2fff)" showValue="percent" height={6} />
+                  <StatBar label="POWER" value={92} color="var(--hdux-demo-green, #00e676)" showValue="percent" height={6} />
                 </div>
               </div>
             </Box>
@@ -319,7 +356,7 @@ export function LandingPage({
                 <div className="hdux-landing__component-name">RADIAL METER</div>
                 <div className="hdux-landing__component-demo" style={{ flexDirection: "row", gap: "12px", alignItems: "center" }}>
                   <RadialMeter value={68} label="CPU" size={72} />
-                  <RadialMeter value={82} label="MEM" color="#7b2fff" size={72} />
+                  <RadialMeter value={82} label="MEM" color="var(--hdux-demo-purple, #7b2fff)" size={72} />
                 </div>
               </div>
             </Box>
@@ -330,7 +367,7 @@ export function LandingPage({
                 <div className="hdux-landing__component-name">BUTTON</div>
                 <div className="hdux-landing__component-demo" style={{ gap: "8px" }}>
                   <Button>PRIMARY ACTION</Button>
-                  <Button color="#7b2fff">SECONDARY</Button>
+                  <Button color="var(--hdux-demo-purple, #7b2fff)">SECONDARY</Button>
                 </div>
               </div>
             </Box>
@@ -355,7 +392,7 @@ export function LandingPage({
               <span className="hdux-landing__section-title">HDUX PRO</span>
               <span className="hdux-landing__pro-badge">UNLOCK ALL</span>
             </div>
-            <BuyButton proUrl={proUrl} />
+            <BuyButton proUrl={proUrl} serviceUrl={serviceUrl} />
           </div>
 
           {/* Full-width area chart */}
@@ -367,19 +404,19 @@ export function LandingPage({
                   id: "cpu",
                   label: "CPU %",
                   data: history.cpu.map((v, i) => ({ value: v, label: LIVE_LABELS[i] })),
-                  color: "#00d4ff",
+                  color: "var(--hdux-demo-cyan, #00d4ff)",
                 },
                 {
                   id: "mem",
                   label: "MEM %",
                   data: history.mem.map((v, i) => ({ value: v, label: LIVE_LABELS[i] })),
-                  color: "#7b2fff",
+                  color: "var(--hdux-demo-purple, #7b2fff)",
                 },
                 {
                   id: "net",
                   label: "NET %",
                   data: history.net.map((v, i) => ({ value: v, label: LIVE_LABELS[i] })),
-                  color: "#00e676",
+                  color: "var(--hdux-demo-green, #00e676)",
                 },
               ]}
               width={900}
@@ -487,10 +524,12 @@ export function LandingPage({
                 </ul>
                 <div className="hdux-landing__pricing-cta">
                   <Button
-                    onClick={() => { if (freeUrl) window.open(freeUrl, "_blank"); }}
+                    disabled={!safeUrl(freeUrl)}
+                    onClick={() => { const url = safeUrl(freeUrl); if (url) window.open(url, "_blank", "noopener,noreferrer"); }}
                   >
                     GET HDUX FREE
                   </Button>
+                  {!safeUrl(freeUrl) && <span role="status">Free download unavailable: configure a valid HTTP(S) destination.</span>}
                 </div>
               </div>
             </Box>
@@ -507,7 +546,7 @@ export function LandingPage({
                   {PRO_FEATURES.map((f) => <li key={f} className="pro">{f}</li>)}
                 </ul>
                 <div className="hdux-landing__pricing-cta">
-                  <BuyButton proUrl={proUrl} />
+                  <BuyButton proUrl={proUrl} serviceUrl={serviceUrl} />
                 </div>
               </div>
             </Box>

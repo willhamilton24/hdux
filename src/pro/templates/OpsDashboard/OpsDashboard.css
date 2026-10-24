@@ -2,7 +2,7 @@
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background: var(--hdux-bg, #06080f);
+  background: var(--hdux-background, #06080f);
 }
 
 .hdux-ops-dashboard__body {
@@ -32,4 +32,10 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 16px;
+}
+
+.hdux-ops-dashboard__charts { grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); }
+@media (max-width: 700px) {
+  .hdux-ops-dashboard__body { flex-direction: column; padding: 24px 16px; }
+  .hdux-ops-dashboard__sidebar { flex-basis: auto; }
 }

@@ -7,12 +7,13 @@ import { Button } from "../../../components/Button";
 import { StatBar } from "../../../components/StatBar";
 import { ProGate } from "../../ProGate";
 import type { GameLobbyProps, LobbyPlayer } from "./types";
+import "../templates.css";
 import "./GameLobby.css";
 
 const STATUS_COLORS: Record<LobbyPlayer["status"], string> = {
-  ready: "#00e676",
-  "not-ready": "#ff1744",
-  loading: "#ff6f00",
+  ready: "var(--hdux-demo-green, #00e676)",
+  "not-ready": "var(--hdux-demo-red, #ff1744)",
+  loading: "var(--hdux-demo-orange, #ff6f00)",
 };
 const STATUS_LABELS: Record<LobbyPlayer["status"], string> = {
   ready: "READY",
@@ -41,7 +42,7 @@ function PingBars({ ms }: { ms: number }) {
   const filled =
     ms < 40 ? 4 : ms < 80 ? 3 : ms < 150 ? 2 : 1;
   const color =
-    ms < 40 ? "#00e676" : ms < 80 ? "#00d4ff" : ms < 150 ? "#ff6f00" : "#ff1744";
+    ms < 40 ? "var(--hdux-demo-green, #00e676)" : ms < 80 ? "var(--hdux-demo-cyan, #00d4ff)" : ms < 150 ? "var(--hdux-demo-orange, #ff6f00)" : "var(--hdux-demo-red, #ff1744)";
   return (
     <span className="hdux-game-lobby__ping-bars" title={`${ms} ms`} aria-label={`${ms}ms ping`}>
       {Array.from({ length: bars }, (_, i) => (
@@ -87,7 +88,7 @@ function PlayerRow({ player, ping }: { player: LobbyPlayer; ping: number }) {
 
 function usePings(playerIds: Array<string | number>) {
   const [pings, setPings] = useState<Record<string | number, number>>(() =>
-    Object.fromEntries(playerIds.map((id) => [id, Math.floor(Math.random() * 60) + 20]))
+    Object.fromEntries(playerIds.map((id) => [id, 40]))
   );
 
   useEffect(() => {
@@ -111,7 +112,7 @@ function GameLobbyInner({
   players = DEFAULT_PLAYERS,
   matchInfo = DEFAULT_MATCH,
   onReady,
-  color = "#00d4ff",
+  color = "var(--hdux-demo-cyan, #00d4ff)",
   className,
   style,
 }: GameLobbyProps) {
@@ -136,13 +137,13 @@ function GameLobbyInner({
   }, [countdown]);
 
   const readyCount = players.filter((p) => p.status === "ready").length;
-  const allReady = readyCount === players.length;
+  const allReady = players.length > 0 && readyCount === players.length;
   const teamA = players.filter((p) => p.team === "A");
   const teamB = players.filter((p) => p.team === "B");
   const hasTeams = teamA.length > 0 && teamB.length > 0;
 
   const countdownUrgent = countdown > 0 && countdown <= 10;
-  const countdownColor = allReady ? "#00e676" : countdownUrgent ? "#ff6f00" : color;
+  const countdownColor = allReady ? "var(--hdux-demo-green, #00e676)" : countdownUrgent ? "var(--hdux-demo-orange, #ff6f00)" : color;
 
   function handleReadyToggle() {
     const next = !ready;
@@ -169,7 +170,7 @@ function GameLobbyInner({
         className={["hdux-game-lobby", className].filter(Boolean).join(" ")}
         style={style}
       >
-        <TopBar>
+        <TopBar static>
           <BarLeft>
             <BarElement>
               <Text variant="body">{matchInfo.mode ?? "LOBBY"}</Text>
@@ -177,8 +178,8 @@ function GameLobbyInner({
           </BarLeft>
           <BarRight>
             {allReady && countdown === 0 && (
-              <BarElement color="#00e676">
-                <Text variant="body" color="#00e676">ALL READY</Text>
+              <BarElement color="var(--hdux-demo-green, #00e676)">
+                <Text variant="body" color="var(--hdux-demo-green, #00e676)">ALL READY</Text>
               </BarElement>
             )}
             <BarElement>
@@ -210,7 +211,7 @@ function GameLobbyInner({
                   {String(countdown % 60).padStart(2, "0")}
                 </div>
               ) : allReady ? (
-                <div className="hdux-game-lobby__all-ready" style={{ color: "#00e676" }}>
+                <div className="hdux-game-lobby__all-ready" style={{ color: "var(--hdux-demo-green, #00e676)" }}>
                   ALL PLAYERS READY
                 </div>
               ) : null}
@@ -244,14 +245,14 @@ function GameLobbyInner({
               <StatBar
                 label="PLAYERS READY"
                 value={readyCount}
-                max={players.length}
-                color={allReady ? "#00e676" : color}
+                max={Math.max(1, players.length)}
+                color={allReady ? "var(--hdux-demo-green, #00e676)" : color}
                 showValue
                 height={8}
               />
               <Button
                 onClick={handleReadyToggle}
-                color={ready ? "#00e676" : undefined}
+                color={ready ? "var(--hdux-demo-green, #00e676)" : undefined}
               >
                 {ready ? "READY ✓" : "MARK READY"}
               </Button>
@@ -267,7 +268,7 @@ function GameLobbyInner({
           </BarLeft>
           <BarRight>
             <BarElement>
-              <Text variant="body" color={allReady ? "#00e676" : undefined}>
+              <Text variant="body" color={allReady ? "var(--hdux-demo-green, #00e676)" : undefined}>
                 {readyCount}/{players.length} READY
               </Text>
             </BarElement>

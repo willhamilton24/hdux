@@ -1,19 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { HduxProProvider } from "../../ProProvider";
+import { licensed, unlicensed } from "../../../../.storybook/licenseFixtures";
 import { OpsDashboard } from "./OpsDashboard";
 
-const PRO_KEY = "HDUX-PRO-TEST-0000-0000-0000";
 
 const meta: Meta<typeof OpsDashboard> = {
   title: "HDUX Pro/Templates/OpsDashboard",
   component: OpsDashboard,
-  decorators: [
-    (Story) => (
-      <HduxProProvider licenseKey={PRO_KEY}>
-        <Story />
-      </HduxProProvider>
-    ),
-  ],
+  decorators: [licensed],
   parameters: {
     layout: "fullscreen",
   },

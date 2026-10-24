@@ -1,19 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { HduxProProvider } from "../../ProProvider";
+import { licensed, unlicensed } from "../../../../.storybook/licenseFixtures";
 import { GameLobby } from "./GameLobby";
 
-const PRO_KEY = "HDUX-PRO-TEST-0000-0000-0000";
 
 const meta: Meta<typeof GameLobby> = {
   title: "HDUX Pro/Templates/GameLobby",
   component: GameLobby,
-  decorators: [
-    (Story) => (
-      <HduxProProvider licenseKey={PRO_KEY}>
-        <Story />
-      </HduxProProvider>
-    ),
-  ],
+  decorators: [licensed],
   parameters: {
     layout: "fullscreen",
   },
