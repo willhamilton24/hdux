@@ -97,6 +97,15 @@
   background: color-mix(in srgb, var(--hdux-datagrid-accent, #00d4ff) 12%, transparent);
 }
 
+.hdux-datagrid__sr-status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
 .hdux-datagrid__empty {
   text-align: center;
   padding: 32px;
@@ -105,6 +114,55 @@
   text-transform: uppercase;
   opacity: 0.4;
   color: var(--hdux-datagrid-accent, #00d4ff);
+}
+
+.hdux-datagrid__loading {
+  text-align: center;
+  padding: 32px;
+  font-size: 0.65rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--hdux-datagrid-accent, #00d4ff);
+  animation: hdux-datagrid-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes hdux-datagrid-pulse {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 1; }
+}
+
+.hdux-datagrid__error-cell {
+  padding: 0;
+}
+
+.hdux-datagrid__error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 32px;
+  font-size: 0.65rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #ff1744;
+}
+
+.hdux-datagrid__retry-btn {
+  background: transparent;
+  border: 1px solid #ff1744;
+  color: #ff1744;
+  font-family: var(--hdux-font-main, monospace);
+  font-size: 0.65rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 6px 18px;
+  cursor: pointer;
+  opacity: 0.8;
+  transition: opacity 150ms;
+}
+
+.hdux-datagrid__retry-btn:hover {
+  opacity: 1;
 }
 
 .hdux-datagrid__pagination {
