@@ -411,6 +411,17 @@ the harness's final correlation summary, with no credentials, Checkout URLs, cus
 details, or license keys. Public deployment/delivery verification remains disabled by
 project policy.
 
+Review-fix checks (2026-10-22): root build/typecheck, license-service build, and
+standalone strict typechecking of the E2E test passed. Missing-config and non-test
+credential probes failed explicitly as intended. The normal E2E command was
+BLOCKED by missing local configuration; checkout, database isolation and key
+issuance have not been verified against the provisioned services in this run.
+A failed database-connection probe also exited promptly without a server-close hang.
+
+Recheck (2026-10-24): root `npm run typecheck` and `npm run build`, license-service
+`npm run build`, and `npm run test:e2e` with no credentials all still pass / BLOCK
+as expected after the support payment link additions. No code changes required.
+
 Private verification attempt (2026-10-24, started 08:44:18 UTC), revision
 `f2041c2fe7a7ca68af9eb59205a755ce33682db3`: ran `npm run test:e2e` using the
 existing THRONE test credentials supplied in memory. Neon schema creation and
