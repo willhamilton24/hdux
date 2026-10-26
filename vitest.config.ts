@@ -20,6 +20,11 @@ export default defineConfig({
           include: ['tests/**/*.test.tsx'],
           browser: {
             enabled: true, headless: true, provider: playwright({}),
+            commands: {
+              async setReducedMotion({ page }, preference: 'reduce' | 'no-preference') {
+                await page.emulateMedia({ reducedMotion: preference });
+              },
+            },
             instances: [{ browser: 'chromium' }],
           },
         },

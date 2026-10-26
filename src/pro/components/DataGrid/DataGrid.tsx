@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useTheme } from "../../../theme/useTheme";
 import { ProGate } from "../../ProGate";
 import type { DataGridColumn, DataGridProps, SortDirection } from "./types";
@@ -15,11 +15,30 @@ function DataGridInner<T extends Row>({
   color,
   className,
   style,
+  loading = false,
+  error = false,
+  onRetry,
+  loadingMessage = "LOADING…",
+  errorMessage = "ERROR LOADING DATA",
+  emptyMessage = "NO DATA",
+  noMatchMessage = "NO RESULTS",
+  defaultQuery = "",
 }: DataGridProps<T>) {
   const { theme } = useTheme();
   const accent = color ?? theme.mainColor;
 
-  const [query, setQuery] = useState("");
+  const gridRef = useRef<HTMLTableElement>(null);
+  const retryRef = useRef<HTMLButtonElement | null>(null);
+  // React detaches the ref before removing the button, while focus is observable.
+  const setRetryRef = useCallback((node: HTMLButtonElement | null) => {
+    const previous = retryRef.current;
+    if (!node && previous && previous.ownerDocument.activeElement === previous) {
+      gridRef.current?.focus();
+    }
+    retryRef.current = node;
+  }, []);
+
+  const [query, setQuery] = useState(defaultQuery);
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<SortDirection>("asc");
   const [page, setPage] = useState(0);
@@ -58,12 +77,29 @@ function DataGridInner<T extends Row>({
     setPage(0);
   }
 
+  const errorText = typeof error === "string" ? error : errorMessage;
+
+  const statusAnnouncement = loading
+    ? loadingMessage
+    : error
+    ? errorText
+    : filtered.length === 0 && rows.length === 0
+    ? emptyMessage
+    : filtered.length === 0
+    ? noMatchMessage
+    : "";
+
   return (
     <div
       className={["hdux-datagrid", className].filter(Boolean).join(" ")}
       style={{ "--hdux-datagrid-accent": accent, ...style } as React.CSSProperties}
     >
-      {searchable && (
+      {/* Visually hidden live region so screen readers announce state changes */}
+      <span role="status" aria-live="polite" className="hdux-datagrid__sr-status">
+        {statusAnnouncement}
+      </span>
+
+      {searchable && !loading && !error && (
         <div className="hdux-datagrid__toolbar">
           <input
             className="hdux-datagrid__search"
@@ -83,7 +119,7 @@ function DataGridInner<T extends Row>({
       )}
 
       <div className="hdux-datagrid__scroll">
-        <table className="hdux-datagrid__table" role="grid">
+        <table ref={gridRef} className="hdux-datagrid__table" role="grid" aria-label="Data grid" tabIndex={-1}>
           <thead>
             <tr>
               {columns.map((col) => (
@@ -127,10 +163,34 @@ function DataGridInner<T extends Row>({
             </tr>
           </thead>
           <tbody>
-            {visible.length === 0 ? (
+            {loading ? (
+              <tr>
+                <td className="hdux-datagrid__loading" colSpan={columns.length} aria-hidden="true">
+                  {loadingMessage}
+                </td>
+              </tr>
+            ) : error ? (
+              <tr>
+                <td className="hdux-datagrid__error-cell" colSpan={columns.length}>
+                  <div className="hdux-datagrid__error">
+                    <span>{errorText}</span>
+                    {onRetry && (
+                      <button
+                        type="button"
+                        ref={setRetryRef}
+                        className="hdux-datagrid__retry-btn"
+                        onClick={onRetry}
+                      >
+                        RETRY
+                      </button>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ) : filtered.length === 0 ? (
               <tr>
                 <td className="hdux-datagrid__empty" colSpan={columns.length}>
-                  NO RESULTS
+                  {rows.length === 0 ? emptyMessage : noMatchMessage}
                 </td>
               </tr>
             ) : (
@@ -165,11 +225,11 @@ function DataGridInner<T extends Row>({
         </table>
       </div>
 
-      {pageSize > 0 && totalPages > 1 && (
+      {!loading && !error && pageSize > 0 && totalPages > 1 && (
         <div className="hdux-datagrid__pagination">
           <button
             className="hdux-datagrid__page-btn"
-            onClick={() => setPage((p) => Math.max(0, p - 1))}
+            onClick={() => setPage(Math.max(0, safePage - 1))}
             disabled={safePage === 0}
             aria-label="Previous page"
           >
@@ -180,7 +240,7 @@ function DataGridInner<T extends Row>({
           </span>
           <button
             className="hdux-datagrid__page-btn"
-            onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+            onClick={() => setPage(Math.min(totalPages - 1, safePage + 1))}
             disabled={safePage === totalPages - 1}
             aria-label="Next page"
           >
