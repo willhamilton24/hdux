@@ -1,11 +1,10 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { HduxThemeProvider } from "../../../theme/ThemeProvider";
-import { HduxProProvider } from "../../ProProvider";
+import { licensed } from "../../../../.storybook/licenseFixtures";
 import { DataGrid } from "./DataGrid";
 import type { DataGridColumn } from "./types";
 
-const PRO_KEY = "HDUX-PRO-TEST-0000-0000-0000";
 
 const AGENTS = Array.from({ length: 24 }, (_, i) => ({
   id: i + 1,
@@ -51,6 +50,7 @@ const meta: Meta<typeof DataGrid> = {
   title: "HDUX Pro/DataGrid",
   component: DataGrid,
   decorators: [
+    licensed,
     (Story) => (
       <HduxThemeProvider
         config={{
@@ -65,11 +65,9 @@ const meta: Meta<typeof DataGrid> = {
           },
         }}
       >
-        <HduxProProvider licenseKey={PRO_KEY}>
-          <div style={{ padding: 40, background: "#0a0a1a" }}>
-            <Story />
-          </div>
-        </HduxProProvider>
+        <div style={{ padding: 40, background: "#0a0a1a" }}>
+          <Story />
+        </div>
       </HduxThemeProvider>
     ),
   ],
@@ -173,4 +171,23 @@ export const NoFilterMatch: Story = {
       noMatchMessage="NO AGENTS MATCH FILTER CRITERIA"
     />
   ),
+};
+
+// Manual completion keeps each asynchronous state inspectable without a network.
+export const RetryLifecycle: Story = {
+  render: function RetryLifecycleStory() {
+    const [state, setState] = useState("error");
+    return (
+      <div>
+        <button onClick={() => setState("error")}>Reset error</button>
+        <button onClick={() => setState("loading")}>Start external refresh</button>
+        <button onClick={() => setState("populated")}>Complete with rows</button>
+        <button onClick={() => setState("empty")}>Complete empty</button>
+        <button onClick={() => setState("error")}>Complete with error</button>
+        <DataGrid columns={COLUMNS} rows={state === "populated" ? AGENTS : []}
+          loading={state === "loading"} error={state === "error"}
+          onRetry={() => setState("loading")} />
+      </div>
+    );
+  },
 };

@@ -204,3 +204,10 @@
   opacity: 0.6;
   color: var(--hdux-datagrid-accent, #00d4ff);
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .hdux-datagrid__loading {
+    animation: none;
+    opacity: 1;
+  }
+}
