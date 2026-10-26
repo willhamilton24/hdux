@@ -26,4 +26,24 @@ export interface InputProps {
   id?: string;
   name?: string;
   autoFocus?: boolean;
+  /** Supplemental text displayed below the field */
+  helperText?: string;
+  /** Error message — sets aria-invalid and renders below the field in error color */
+  errorText?: string;
+  /** Native required attribute */
+  required?: boolean;
+  /** Native autocomplete attribute */
+  autoComplete?: string;
+  /** Native pattern attribute */
+  pattern?: string;
+  /** Native minlength attribute */
+  minLength?: number;
+  /** Native maxlength attribute */
+  maxLength?: number;
+  /** Native min attribute (number/date inputs) */
+  min?: string | number;
+  /** Native max attribute (number/date inputs) */
+  max?: string | number;
+  /** aria-label when no visible label is provided */
+  "aria-label"?: string;
 }

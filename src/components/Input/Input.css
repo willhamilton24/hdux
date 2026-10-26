@@ -134,3 +134,33 @@
 .hdux-input-wrapper--disabled .hdux-input-el {
   cursor: not-allowed;
 }
+
+/* ── Error state ──────────────────────────────────────── */
+
+.hdux-input-wrapper--error {
+  --hdux-input-color: #ff3b3b;
+}
+
+/* ── Helper / error text ─────────────────────────────── */
+
+.hdux-input-helper-text,
+.hdux-input-error-text {
+  font-family: var(--hdux-font-main, inherit);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.hdux-input-helper-text {
+  color: color-mix(in srgb, var(--hdux-input-color) 60%, transparent);
+}
+
+.hdux-input-error-text {
+  color: #ff3b3b;
+}
+
+/* ── Required marker ─────────────────────────────────── */
+
+.hdux-input-required {
+  color: #ff3b3b;
+}
