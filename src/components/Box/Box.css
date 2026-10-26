@@ -210,3 +210,28 @@
 .hdux-box--content-blink .hdux-box-content {
   animation: hdux-box-blink 240ms ease-in-out var(--hdux-box-content-blink-iterations, 1);
 }
+
+/* ── Reduced motion ─────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .hdux-box-border {
+    transition: none;
+  }
+  .hdux-box-loading-text {
+    transition: none;
+  }
+  .hdux-box-content {
+    transition: none;
+  }
+  .hdux-box--text-pulse .hdux-box-loading-text,
+  .hdux-box--corner-pulse .hdux-box-corner,
+  .hdux-box--corner-spin .hdux-box-corner--tl,
+  .hdux-box--corner-spin .hdux-box-corner--tr,
+  .hdux-box--corner-spin .hdux-box-corner--br,
+  .hdux-box--corner-spin .hdux-box-corner--bl,
+  .hdux-box--text-blink .hdux-box-loading-text,
+  .hdux-box--corner-blink .hdux-box-corner,
+  .hdux-box--content-blink .hdux-box-content {
+    animation: none;
+  }
+}

@@ -69,6 +69,7 @@ export function Box({
     contentOpacity,
     traverseAxis,
     showFullBorder,
+    reducedMotion,
   } = useBoxAnimation({
     animation,
     hasLoaded,
@@ -163,7 +164,7 @@ export function Box({
           style={{
             ...cornerPositions[pos],
             transition:
-              animation !== "static"
+              animation !== "static" && !reducedMotion
                 ? `top ${TRAVERSE_DURATION}ms ease-in-out, bottom ${TRAVERSE_DURATION}ms ease-in-out, left ${TRAVERSE_DURATION}ms ease-in-out, right ${TRAVERSE_DURATION}ms ease-in-out`
                 : undefined,
           }}

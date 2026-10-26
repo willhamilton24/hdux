@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { usePrefersReducedMotion } from "../../hooks/usePrefersReducedMotion";
 import type {
   AnimationPhase,
   BoxAnimationMode,
@@ -41,6 +42,8 @@ interface UseBoxAnimationResult {
   traverseAxis: "none" | "vertical" | "horizontal" | "both";
   /** Whether full border lines should be visible */
   showFullBorder: boolean;
+  /** Whether the user prefers reduced motion */
+  reducedMotion: boolean;
 }
 
 export function useBoxAnimation({
@@ -49,6 +52,8 @@ export function useBoxAnimation({
   loadingAnimations,
   fullBorder,
 }: UseBoxAnimationConfig): UseBoxAnimationResult {
+  const reducedMotion = usePrefersReducedMotion();
+
   const [phase, setPhase] = useState<AnimationPhase>(() =>
     animation === "static" ? "settled" : "idle"
   );
@@ -60,6 +65,8 @@ export function useBoxAnimation({
   loadingAnimationsRef.current = loadingAnimations;
   const fullBorderRef = useRef(fullBorder);
   fullBorderRef.current = fullBorder;
+  const reducedMotionRef = useRef(reducedMotion);
+  reducedMotionRef.current = reducedMotion;
 
   const scheduleTimeout = useCallback((fn: () => void, ms: number) => {
     const id = setTimeout(fn, ms);
@@ -106,6 +113,15 @@ export function useBoxAnimation({
     // Clear any pending timeouts from previous runs
     timeouts.current.forEach(clearTimeout);
     timeouts.current = [];
+
+    // Skip all decorative phases (blink, traversal) for motion-sensitive users.
+    // Content is still revealed and the box still settles — loading state is preserved
+    // while hasLoaded is false; this only affects the transition sequence.
+    if (reducedMotionRef.current) {
+      setPhase("content-reveal");
+      scheduleTimeout(() => setPhase("settled"), 0);
+      return;
+    }
 
     let elapsed = 0;
 
@@ -168,18 +184,20 @@ export function useBoxAnimation({
   const isPreTraverse =
     isLoading || phase === "text-blink" || phase === "corner-blink-start";
 
-  // CSS classes for loading animations
+  // CSS classes for loading animations — omitted entirely when reduced motion is active
   const cssClasses: string[] = [];
-  if (isLoading && loadingAnimations) {
+  if (isLoading && loadingAnimations && !reducedMotion) {
     if (loadingAnimations.textPulse) cssClasses.push("hdux-box--text-pulse");
     if (loadingAnimations.cornerPulse) cssClasses.push("hdux-box--corner-pulse");
     if (loadingAnimations.cornerSpin) cssClasses.push("hdux-box--corner-spin");
   }
-  if (phase === "text-blink") cssClasses.push("hdux-box--text-blink");
-  if (phase === "corner-blink-start" || phase === "corner-blink-end")
-    cssClasses.push("hdux-box--corner-blink");
-  if (phase === "content-reveal" && loadingAnimations?.contentBlink)
-    cssClasses.push("hdux-box--content-blink");
+  if (!reducedMotion) {
+    if (phase === "text-blink") cssClasses.push("hdux-box--text-blink");
+    if (phase === "corner-blink-start" || phase === "corner-blink-end")
+      cssClasses.push("hdux-box--corner-blink");
+    if (phase === "content-reveal" && loadingAnimations?.contentBlink)
+      cssClasses.push("hdux-box--content-blink");
+  }
 
   // Corner positions
   const cornersAtFinal = !isPreTraverse;
@@ -222,5 +240,6 @@ export function useBoxAnimation({
     cornersAtFinal,
     traverseAxis,
     showFullBorder,
+    reducedMotion,
   };
 }
