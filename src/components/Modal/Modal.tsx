@@ -1,11 +1,9 @@
 import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
+import { tabbable } from "tabbable";
 import { useTheme } from "../../theme/useTheme";
 import type { ModalProps } from "./types";
 import "./Modal.css";
-
-const FOCUSABLE =
-  'a[href],area[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),button:not([disabled]),[tabindex]:not([tabindex="-1"])';
 
 export function Modal({
   open,
@@ -43,21 +41,20 @@ export function Modal({
       if (e.key !== "Tab") return;
       const dialog = dialogRef.current;
       if (!dialog) return;
-      const focusable = Array.from(dialog.querySelectorAll<HTMLElement>(FOCUSABLE));
-      if (focusable.length === 0) return;
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      if (e.shiftKey) {
-        if (document.activeElement === first || document.activeElement === dialog) {
-          e.preventDefault();
-          last.focus();
-        }
-      } else {
-        if (document.activeElement === last || document.activeElement === dialog) {
-          e.preventDefault();
-          first.focus();
-        }
+      // Recompute on every keypress: content, visibility and tab order can change.
+      const candidates = tabbable(dialog);
+      const index = candidates.indexOf(document.activeElement as HTMLElement);
+      e.preventDefault();
+      if (candidates.length === 0) {
+        dialog.focus();
+        return;
       }
+      // Escaped focus and programmatically focused non-tabbable descendants
+      // enter at the appropriate boundary, just like the dialog container.
+      const next = index === -1
+        ? (e.shiftKey ? candidates.length - 1 : 0)
+        : (index + (e.shiftKey ? -1 : 1) + candidates.length) % candidates.length;
+      candidates[next].focus();
     };
     document.addEventListener("keydown", handleKey);
     return () => document.removeEventListener("keydown", handleKey);
@@ -72,18 +69,22 @@ export function Modal({
     };
   }, [open]);
 
-  // Capture trigger, focus dialog on open; restore trigger focus on close.
+  // Cleanup runs on close, unmount and StrictMode replay. Restore before the
+  // next setup captures focus, and never capture the dialog as its own trigger.
   useEffect(() => {
-    if (open) {
-      triggerRef.current = document.activeElement;
-      dialogRef.current?.focus();
-    } else {
+    if (!open) return;
+    const active = document.activeElement;
+    if (active instanceof HTMLElement && !dialogRef.current?.contains(active)) {
+      triggerRef.current = active;
+    }
+    dialogRef.current?.focus();
+    return () => {
       const trigger = triggerRef.current;
-      triggerRef.current = null;
-      if (trigger instanceof HTMLElement) {
+      if (trigger instanceof HTMLElement && trigger.isConnected) {
         trigger.focus();
       }
-    }
+      triggerRef.current = null;
+    };
   }, [open]);
 
   if (!open) return null;
