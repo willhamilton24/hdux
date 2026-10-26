@@ -4,6 +4,9 @@ import { useTheme } from "../../theme/useTheme";
 import type { ModalProps } from "./types";
 import "./Modal.css";
 
+const FOCUSABLE =
+  'a[href],area[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),button:not([disabled]),[tabindex]:not([tabindex="-1"])';
+
 export function Modal({
   open,
   onClose,
@@ -27,11 +30,34 @@ export function Modal({
     : theme.boxCorners.width;
 
   const dialogRef = useRef<HTMLDivElement>(null);
+  // Track the element that had focus when the modal opened so we can restore it.
+  const triggerRef = useRef<Element | null>(null);
 
   useEffect(() => {
     if (!open) return;
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose?.();
+      if (e.key === "Escape") {
+        onClose?.();
+        return;
+      }
+      if (e.key !== "Tab") return;
+      const dialog = dialogRef.current;
+      if (!dialog) return;
+      const focusable = Array.from(dialog.querySelectorAll<HTMLElement>(FOCUSABLE));
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey) {
+        if (document.activeElement === first || document.activeElement === dialog) {
+          e.preventDefault();
+          last.focus();
+        }
+      } else {
+        if (document.activeElement === last || document.activeElement === dialog) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
     };
     document.addEventListener("keydown", handleKey);
     return () => document.removeEventListener("keydown", handleKey);
@@ -46,10 +72,17 @@ export function Modal({
     };
   }, [open]);
 
-  // Focus the dialog on open
+  // Capture trigger, focus dialog on open; restore trigger focus on close.
   useEffect(() => {
     if (open) {
+      triggerRef.current = document.activeElement;
       dialogRef.current?.focus();
+    } else {
+      const trigger = triggerRef.current;
+      triggerRef.current = null;
+      if (trigger instanceof HTMLElement) {
+        trigger.focus();
+      }
     }
   }, [open]);
 
