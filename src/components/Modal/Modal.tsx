@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
+import { tabbable } from "tabbable";
 import { useTheme } from "../../theme/useTheme";
 import type { ModalProps } from "./types";
 import "./Modal.css";
@@ -27,11 +28,33 @@ export function Modal({
     : theme.boxCorners.width;
 
   const dialogRef = useRef<HTMLDivElement>(null);
+  // Track the element that had focus when the modal opened so we can restore it.
+  const triggerRef = useRef<Element | null>(null);
 
   useEffect(() => {
     if (!open) return;
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose?.();
+      if (e.key === "Escape") {
+        onClose?.();
+        return;
+      }
+      if (e.key !== "Tab") return;
+      const dialog = dialogRef.current;
+      if (!dialog) return;
+      // Recompute on every keypress: content, visibility and tab order can change.
+      const candidates = tabbable(dialog);
+      const index = candidates.indexOf(document.activeElement as HTMLElement);
+      e.preventDefault();
+      if (candidates.length === 0) {
+        dialog.focus();
+        return;
+      }
+      // Escaped focus and programmatically focused non-tabbable descendants
+      // enter at the appropriate boundary, just like the dialog container.
+      const next = index === -1
+        ? (e.shiftKey ? candidates.length - 1 : 0)
+        : (index + (e.shiftKey ? -1 : 1) + candidates.length) % candidates.length;
+      candidates[next].focus();
     };
     document.addEventListener("keydown", handleKey);
     return () => document.removeEventListener("keydown", handleKey);
@@ -46,11 +69,22 @@ export function Modal({
     };
   }, [open]);
 
-  // Focus the dialog on open
+  // Cleanup runs on close, unmount and StrictMode replay. Restore before the
+  // next setup captures focus, and never capture the dialog as its own trigger.
   useEffect(() => {
-    if (open) {
-      dialogRef.current?.focus();
+    if (!open) return;
+    const active = document.activeElement;
+    if (active instanceof HTMLElement && !dialogRef.current?.contains(active)) {
+      triggerRef.current = active;
     }
+    dialogRef.current?.focus();
+    return () => {
+      const trigger = triggerRef.current;
+      if (trigger instanceof HTMLElement && trigger.isConnected) {
+        trigger.focus();
+      }
+      triggerRef.current = null;
+    };
   }, [open]);
 
   if (!open) return null;
