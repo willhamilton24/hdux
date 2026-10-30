@@ -59,6 +59,7 @@ export function useBoxAnimation({
   );
   const timeouts = useRef<ReturnType<typeof setTimeout>[]>([]);
   const hasTransitioned = useRef(false);
+  const sequence = useRef(0);
   // Keep refs for object/optional deps so the transition effect
   // doesn't re-fire when a new object reference is passed.
   const loadingAnimationsRef = useRef(loadingAnimations);
@@ -68,8 +69,17 @@ export function useBoxAnimation({
   const reducedMotionRef = useRef(reducedMotion);
   reducedMotionRef.current = reducedMotion;
 
+  const cancelTimeouts = useCallback(() => {
+    sequence.current++;
+    timeouts.current.forEach(clearTimeout);
+    timeouts.current = [];
+  }, []);
+
   const scheduleTimeout = useCallback((fn: () => void, ms: number) => {
-    const id = setTimeout(fn, ms);
+    const currentSequence = sequence.current;
+    const id = setTimeout(() => {
+      if (currentSequence === sequence.current && !reducedMotionRef.current) fn();
+    }, ms);
     timeouts.current.push(id);
     return id;
   }, []);
@@ -80,11 +90,10 @@ export function useBoxAnimation({
   // sticks in its loading state in dev.
   useEffect(() => {
     return () => {
-      timeouts.current.forEach(clearTimeout);
-      timeouts.current = [];
+      cancelTimeouts();
       hasTransitioned.current = false;
     };
-  }, []);
+  }, [cancelTimeouts]);
 
   // Static mode: always settled
   useEffect(() => {
@@ -103,25 +112,25 @@ export function useBoxAnimation({
 
   // Trigger the transition sequence once when hasLoaded becomes true
   useEffect(() => {
-    if (animation === "static" || !hasLoaded) return;
+    if (animation === "static" || !hasLoaded) {
+      cancelTimeouts();
+      return;
+    }
+    // Preference changes must interrupt an already-started reveal, before the
+    // once-per-load guard. Keep it completed when motion is enabled again.
+    if (reducedMotion) {
+      cancelTimeouts();
+      hasTransitioned.current = true;
+      setPhase("settled");
+      return;
+    }
     if (hasTransitioned.current) return;
     hasTransitioned.current = true;
 
     const anims = loadingAnimationsRef.current;
     const border = fullBorderRef.current;
 
-    // Clear any pending timeouts from previous runs
-    timeouts.current.forEach(clearTimeout);
-    timeouts.current = [];
-
-    // Skip all decorative phases (blink, traversal) for motion-sensitive users.
-    // Content is still revealed and the box still settles — loading state is preserved
-    // while hasLoaded is false; this only affects the transition sequence.
-    if (reducedMotionRef.current) {
-      setPhase("content-reveal");
-      scheduleTimeout(() => setPhase("settled"), 0);
-      return;
-    }
+    cancelTimeouts();
 
     let elapsed = 0;
 
@@ -177,7 +186,7 @@ export function useBoxAnimation({
 
     // Phase: settled
     scheduleTimeout(() => setPhase("settled"), elapsed);
-  }, [animation, hasLoaded, scheduleTimeout]);
+  }, [animation, hasLoaded, reducedMotion, cancelTimeouts, scheduleTimeout]);
 
   // Derive output from current phase
   const isLoading = phase === "idle" || phase === "loading";

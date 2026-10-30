@@ -214,6 +214,8 @@
 /* ── Reduced motion ─────────────────────────────────── */
 
 @media (prefers-reduced-motion: reduce) {
+  /* Cancel an in-flight corner transition when its inline style is removed. */
+  .hdux-box-corner,
   .hdux-box-border {
     transition: none;
   }
