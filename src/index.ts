@@ -79,3 +79,12 @@ export type { StatBarProps } from "./components/StatBar";
 
 export { RadialMeter } from "./components/RadialMeter";
 export type { RadialMeterProps } from "./components/RadialMeter";
+
+export { Select } from "./components/Select";
+export type { SelectProps } from "./components/Select";
+
+export { Checkbox } from "./components/Checkbox";
+export type { CheckboxProps } from "./components/Checkbox";
+
+export { TextArea } from "./components/TextArea";
+export type { TextAreaProps } from "./components/TextArea";

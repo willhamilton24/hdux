@@ -1,0 +1,83 @@
+.hdux-select-el,
+.hdux-textarea-el {
+  width: 100%;
+  border-radius: 0;
+}
+
+.hdux-select-el {
+  appearance: none;
+  padding-right: calc(var(--hdux-input-corner-len, 12px) + 26px);
+  cursor: pointer;
+}
+
+.hdux-select-wrapper .hdux-input-field:has(select:not([multiple]):not([size]))::after,
+.hdux-select-wrapper .hdux-input-field:has(select[size="1"]:not([multiple]))::after {
+  content: "";
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  border-right: 2px solid var(--hdux-input-color);
+  border-bottom: 2px solid var(--hdux-input-color);
+  transform: translateY(-75%) rotate(45deg);
+  pointer-events: none;
+}
+
+.hdux-select-el option,
+.hdux-select-el optgroup {
+  color: var(--hdux-text-color, #e0e0e0);
+  background: var(--hdux-background, #0a0a1a);
+}
+
+.hdux-textarea-el {
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.hdux-checkbox-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.hdux-checkbox-row .hdux-input-field {
+  flex: none;
+}
+
+.hdux-checkbox-el {
+  appearance: none;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+  width: calc(var(--hdux-input-corner-len, 12px) * 2 + 4px);
+  height: calc(var(--hdux-input-corner-len, 12px) * 2 + 4px);
+  border-radius: 0;
+  cursor: pointer;
+  display: grid;
+  place-content: center;
+}
+
+.hdux-checkbox-el:checked::after {
+  content: "";
+  width: 5px;
+  height: 10px;
+  border: solid var(--hdux-input-color);
+  border-width: 0 2px 2px 0;
+  transform: translateY(-2px) rotate(45deg);
+}
+
+.hdux-checkbox-row .hdux-input-label { cursor: pointer; }
+.hdux-checkbox-wrapper.hdux-input-wrapper--disabled .hdux-input-label { cursor: not-allowed; }
+
+.hdux-checkbox-el:focus-visible {
+  outline: 2px solid var(--hdux-input-color);
+  outline-offset: 3px;
+}
+
+@media (forced-colors: active) {
+  .hdux-select-el, .hdux-checkbox-el { appearance: auto; }
+  .hdux-checkbox-el:checked::after,
+  .hdux-select-wrapper .hdux-input-field::after { display: none; }
+  .hdux-select-el, .hdux-checkbox-el, .hdux-textarea-el { border: 1px solid ButtonText; }
+}
