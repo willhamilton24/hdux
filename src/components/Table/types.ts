@@ -11,6 +11,7 @@ export interface TableColumn<T = Record<string, unknown>> {
 export interface TableProps<T = Record<string, unknown>> {
   columns: TableColumn<T>[];
   rows: T[];
+  /** Makes rows tabbable and activates them on click, Enter, or Space. */
   onRowClick?: (row: T, rowIndex: number) => void;
   /** Override the accent color */
   color?: string;
