@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useTheme } from "../../../theme/useTheme";
 import { ProGate } from "../../ProGate";
 import type { AreaChartProps, AreaChartSeries } from "./types";
@@ -39,12 +39,21 @@ function AreaChartInner({
   animate = true,
   showDots = true,
   title,
+  loading = false,
+  loadingMessage = "LOADING…",
+  emptyMessage = "NO DATA",
+  insufficientDataMessage = "NOT ENOUGH DATA",
   className,
   style,
   ...rest
 }: AreaChartProps) {
   const { theme } = useTheme();
   const seriesList = normalizeSeries(rest);
+  const chartId = useId();
+  const hasData = seriesList.some((s) => s.data.length > 0);
+  const hasPlot = seriesList.some((s) => s.data.length > 1);
+  const status = loading ? loadingMessage : !hasData ? emptyMessage : !hasPlot ? insufficientDataMessage : "";
+  const showPlot = !loading && hasPlot;
   const pathRefs = useRef<SVGPathElement[]>([]);
   const [drawn, setDrawn] = useState(!animate);
 
@@ -64,7 +73,7 @@ function AreaChartInner({
     minVal + (range * i) / GRID_LINES
   );
 
-  const xLabels = seriesList[0]?.data.map((d) => d.label ?? "");
+  const xLabels = seriesList.find((s) => s.data.length > 1)?.data.map((d) => d.label ?? "");
 
   useEffect(() => {
     if (!animate) return;
@@ -83,13 +92,21 @@ function AreaChartInner({
           {title}
         </div>
       )}
-      <svg
+      <div
+        role="status"
+        aria-live="polite"
+        className={showPlot ? "hdux-area-chart__sr-only" : "hdux-area-chart__status"}
+        style={showPlot ? undefined : { height, color: theme.mainColor }}
+      >
+        {status}
+      </div>
+      {showPlot && <svg
         width={width}
         height={height}
         viewBox={`0 0 ${width} ${height}`}
         className="hdux-area-chart__svg"
         role="img"
-        aria-label={title ?? "Area chart"}
+        aria-label={`${title ?? "Area chart"}. Values are available in the following data table.`}
       >
         <g transform={`translate(${PAD.left},${PAD.top})`}>
           {/* Grid */}
@@ -151,14 +168,15 @@ function AreaChartInner({
 
           {/* Series */}
           {seriesList.map((s, si) => {
+            if (s.data.length === 0) return null;
             const color = s.color ?? theme.mainColor;
             const n = s.data.length;
             const pts = s.data.map((d, i) => ({ x: toX(i, n), y: toY(d.value) }));
             const linePath = smoothPath(pts);
-            const areaPath =
+            const areaPath = n > 1 ?
               linePath +
-              ` L ${pts[pts.length - 1].x},${chartH} L ${pts[0].x},${chartH} Z`;
-            const pathId = `hdux-area-clip-${si}`;
+              ` L ${pts[pts.length - 1].x},${chartH} L ${pts[0].x},${chartH} Z` : "";
+            const pathId = `hdux-area-clip-${chartId}-${si}`;
 
             return (
               <g key={s.id}>
@@ -170,7 +188,7 @@ function AreaChartInner({
                 </defs>
 
                 {/* Area fill */}
-                {drawn && (
+                {drawn && n > 1 && (
                   <path
                     d={areaPath}
                     fill={`url(#${pathId}-grad)`}
@@ -179,7 +197,7 @@ function AreaChartInner({
                 )}
 
                 {/* Line */}
-                <path
+                {n > 1 && <path
                   ref={(el) => {
                     if (el) pathRefs.current[si] = el;
                   }}
@@ -192,10 +210,10 @@ function AreaChartInner({
                       ? `hdux-area-chart__line ${drawn ? "hdux-area-chart__line--drawn" : ""}`
                       : "hdux-area-chart__line hdux-area-chart__line--static"
                   }
-                />
+                />}
 
                 {/* Dots */}
-                {showDots &&
+                {(showDots || n === 1) &&
                   drawn &&
                   pts.map((p, i) => (
                     <circle
@@ -211,7 +229,24 @@ function AreaChartInner({
             );
           })}
         </g>
-      </svg>
+      </svg>}
+      {!loading && hasData && (
+        <table className="hdux-area-chart__sr-only">
+          <caption>{title ?? "Area chart"} — data</caption>
+          <thead>
+            <tr><th scope="col">Series</th><th scope="col">Point</th><th scope="col">Value</th></tr>
+          </thead>
+          <tbody>
+            {seriesList.flatMap((series) => series.data.map((point, index) => (
+              <tr key={`${series.id}-${index}`}>
+                <th scope="row">{series.label ?? series.id}</th>
+                <td>{point.label ?? String(index)}</td>
+                <td>{point.value}</td>
+              </tr>
+            )))}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 }

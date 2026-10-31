@@ -4,6 +4,8 @@ import { HduxThemeProvider } from "../../../theme/ThemeProvider";
 import { HduxProProvider } from "../../ProProvider";
 import { AreaChart } from "./AreaChart";
 
+import { mixedSeries } from "./AreaChart.fixtures";
+
 const PRO_KEY = "HDUX-PRO-TEST-0000-0000-0000";
 
 const meta: Meta<typeof AreaChart> = {
@@ -114,5 +116,42 @@ export const NoLicense: Story = {
     data: [12, 28, 45, 38, 60, 52, 71],
     title: "THROUGHPUT",
     height: 160,
+  },
+};
+
+export const Loading: Story = {
+  args: { title: "THROUGHPUT", loading: true, data: [12, 28, 45] },
+};
+
+export const Empty: Story = {
+  args: { title: "THROUGHPUT", data: [] },
+};
+
+export const SinglePoint: Story = {
+  args: { title: "THROUGHPUT", data: [{ label: "09:00", value: 12 }] },
+};
+
+export const MixedSeries: Story = {
+  args: { title: "SYSTEM TELEMETRY", series: mixedSeries, showDots: false },
+};
+
+export const CustomMessages: Story = {
+  args: { title: "THROUGHPUT", series: [], emptyMessage: "No samples in this time range" },
+};
+
+export const StateTransitions: Story = {
+  render: () => {
+    const [state, setState] = useState("loading");
+    return (
+      <div>
+        <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+          {["loading", "empty", "single", "ready"].map((value) => (
+            <button key={value} onClick={() => setState(value)}>{value}</button>
+          ))}
+        </div>
+        <AreaChart title="THROUGHPUT" loading={state === "loading"}
+          data={state === "empty" ? [] : state === "single" ? [12] : [12, 28, 45]} />
+      </div>
+    );
   },
 };

@@ -63,3 +63,23 @@
   from { r: 0; opacity: 0; }
   to   { r: 2.5; opacity: 0.9; }
 }
+
+.hdux-area-chart__status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+}
+
+.hdux-area-chart__sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
