@@ -1,6 +1,7 @@
 import { createElement, useEffect, useMemo, useRef, useState } from "react";
 import { useTheme } from "../../theme/useTheme";
 import { useBoxContext } from "../Box/BoxContext";
+import { usePrefersReducedMotion } from "../../hooks/usePrefersReducedMotion";
 import type { TextProps } from "./types";
 import {
   VARIANT_ELEMENTS,
@@ -24,6 +25,7 @@ export function Text({
 }: TextProps) {
   const { theme } = useTheme();
   const boxCtx = useBoxContext();
+  const reducedMotion = usePrefersReducedMotion();
 
   // Resolve styling from variant -> theme -> props (props win)
   const themeVariantFont = theme.typography.variants[variant];
@@ -79,6 +81,11 @@ export function Text({
       setAnimState("settled");
       return;
     }
+    if (reducedMotion) {
+      setVisibleChars(total);
+      setAnimState("settled");
+      return;
+    }
     let count = 0;
     printTimerRef.current = setInterval(() => {
       count++;
@@ -89,14 +96,18 @@ export function Text({
       }
     }, PRINT_CHAR_INTERVAL);
     return () => clearInterval(printTimerRef.current);
-  }, [animation, animState, textContent]);
+  }, [animation, animState, textContent, reducedMotion]);
 
   // Sweep animation: let CSS handle it, settle after duration
   useEffect(() => {
     if (animation !== "sweep" || animState !== "animating") return;
+    if (reducedMotion) {
+      setAnimState("settled");
+      return;
+    }
     const id = setTimeout(() => setAnimState("settled"), SWEEP_DURATION);
     return () => clearTimeout(id);
-  }, [animation, animState]);
+  }, [animation, animState, reducedMotion]);
 
   // Build CSS classes
   const classes = ["hdux-text"];

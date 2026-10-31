@@ -1,7 +1,7 @@
 {
   "name": "@hamiltondynamic/hdux",
   "version": "0.3.0",
-  "description": "Hamilton Dynamic User Experience — A React component framework",
+  "description": "Hamilton Dynamic User Experience \u2014 A React component framework",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
@@ -76,5 +76,8 @@
   ],
   "publishConfig": {
     "access": "public"
+  },
+  "dependencies": {
+    "tabbable": "^6.5.1"
   }
 }

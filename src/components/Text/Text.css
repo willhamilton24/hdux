@@ -63,3 +63,14 @@
   mask-image: none;
   -webkit-mask-image: none;
 }
+
+/* ── Reduced motion ─────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .hdux-text--sweep.hdux-text--animating {
+    animation: none;
+    mask-image: none;
+    -webkit-mask-image: none;
+    opacity: 1;
+  }
+}
