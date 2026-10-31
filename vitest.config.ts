@@ -16,8 +16,18 @@ export default defineConfig({
     projects: [
       {
         test: {
+          name: 'ssr',
+          include: ['tests/ssr.test.tsx'],
+          environment: 'node',
+        },
+      },
+      {
+        test: {
           name: 'templates',
           include: ['tests/**/*.test.tsx'],
+          // ssr.test.tsx must run only in the node-environment 'ssr' project;
+          // in the browser, `document` exists and Modal would portal during renderToString.
+          exclude: ['tests/ssr.test.tsx'],
           browser: {
             enabled: true, headless: true, provider: playwright({}),
             commands: {
