@@ -135,12 +135,6 @@
   cursor: not-allowed;
 }
 
-/* ── Error state ──────────────────────────────────────── */
-
-.hdux-input-wrapper--error {
-  --hdux-input-color: #ff3b3b;
-}
-
 /* ── Helper / error text ─────────────────────────────── */
 
 .hdux-input-helper-text,

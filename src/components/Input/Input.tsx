@@ -41,7 +41,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
   const descId = useId();
   const id = idProp ?? autoId;
 
-  const resolvedColor = color ?? theme.mainColor;
+  const resolvedColor = errorText ? "#ff3b3b" : (color ?? theme.mainColor);
   const resolvedCornerLen = cornerLength
     ? `${cornerLength}px`
     : theme.boxCorners.length;
