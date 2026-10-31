@@ -61,6 +61,17 @@ export function Table<T = Record<string, unknown>>({
                   .filter(Boolean)
                   .join(" ")}
                 onClick={() => onRowClick?.(row, rowIdx)}
+                tabIndex={onRowClick ? 0 : undefined}
+                aria-description={onRowClick ? "Press Enter or Space to activate this row." : undefined}
+                aria-keyshortcuts={onRowClick ? "Enter Space" : undefined}
+                onKeyDown={onRowClick ? (event) => {
+                  // Cell controls handle their own keys; retain native row/cell semantics.
+                  if (event.target !== event.currentTarget || event.defaultPrevented) return;
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    if (!event.repeat) onRowClick(row, rowIdx);
+                  }
+                } : undefined}
               >
                 {columns.map((col) => (
                   <td key={col.key} className="hdux-table-td">

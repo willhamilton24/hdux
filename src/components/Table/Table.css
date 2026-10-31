@@ -59,6 +59,11 @@
   background: color-mix(in srgb, var(--hdux-table-color) 12%, transparent);
 }
 
+.hdux-table-tr--clickable:focus-visible {
+  outline: 2px solid var(--hdux-table-color);
+  outline-offset: -2px;
+}
+
 /* ── Empty state ─────────────────────────────────────── */
 
 .hdux-table-empty {
