@@ -185,6 +185,24 @@ A text field with HDUX corner decorations. Fully controlled; supports labels, fo
 />
 ```
 
+### Select, Checkbox, and TextArea
+
+These native controls share `Input`'s corner styling, `color`, `cornerLength`, `cornerWidth`, labels, and helper/error text. Refs point to the native element for focus and validation. `errorText` takes precedence over `helperText` and sets `aria-invalid`; descriptions are linked with `aria-describedby` (including any caller-supplied description IDs). `className` and `style` apply to the wrapper.
+
+```tsx
+import { Select, Checkbox, TextArea } from "@hamiltondynamic/hdux";
+
+<Select label="Plan" name="plan" defaultValue="" required helperText="Choose your purchase plan.">
+  <option value="">Choose a plan</option>
+  <option value="starter">Starter</option>
+  <option value="pro">Pro</option>
+</Select>
+<Checkbox label="Send order updates" name="updates" defaultChecked />
+<TextArea label="Delivery instructions" name="notes" rows={4} maxLength={500} />
+```
+
+Use `value`/`onChange` for controlled selects and text areas, and `checked`/`onChange` for controlled checkboxes. Native attributes such as `disabled`, `required`, `multiple` (Select), and `readOnly` (TextArea) are supported. Provide `aria-label` when omitting a visible label.
+
 ### Table
 
 A themed data table. Pass typed column definitions and row data; each column can include a custom `render` function.
@@ -351,7 +369,7 @@ Open-core npm library: free base components drive adoption, paid "pro" pack (dat
 - [x] Respect `prefers-reduced-motion` in Box and Text animation logic as well as CSS: bypass decorative blinking, traversal, and typewriter timers while preserving loading state and revealing ready content; verify initial preference and preference changes in local browser tests to make templates usable by motion-sensitive customers.
 - [x] Add explicit loading, error/retry, empty-data, and no-filter-match states to Pro `DataGrid`, with accessible status feedback and configurable messages; cover each state with local fixtures and stories so paid dashboards do not show misleading "NO RESULTS" while fetching or after failures.
 - [ ] Make clickable `Table` rows keyboard-accessible: when `onRowClick` is provided, make each row focusable with a visible focus style, activate on Enter/Space, and expose appropriate ARIA semantics; verify with keyboard-only interaction tests so adopters can ship accessible master-detail screens on the free tier.
-- [ ] Complete the form-control set with themed `Select`, `Checkbox`, and `TextArea` components matching `Input`'s corner styling, ref forwarding, and validation pattern (`aria-describedby`/`aria-invalid`, helper/error text), each with Storybook stories, so customers can build entire purchase and settings forms without mixing in unstyled native controls.
+- [x] Complete the form-control set with themed `Select`, `Checkbox`, and `TextArea` components matching `Input`'s corner styling, ref forwarding, and validation pattern (`aria-describedby`/`aria-invalid`, helper/error text), each with Storybook stories, so customers can build entire purchase and settings forms without mixing in unstyled native controls.
 - [ ] Bring Pro `AreaChart` up to the `DataGrid` state standard: render explicit loading and empty-data states instead of a blank or degenerate plot for empty/single-point series, and expose the underlying values to screen readers (visually hidden data table or ARIA description) rather than a bare `role="img"` label; cover with fixtures and stories.
 - [ ] Add an SSR smoke test that `renderToString`s the core and Pro exports (ThemeProvider, Box/Text, templates) without touching browser globals, wired into the local test run, and fix anything it surfaces — server rendering under Next.js is the primary adoption path for a paid React component library.
 - [ ] Public npm/Storybook activation — disabled pending operator authorization
