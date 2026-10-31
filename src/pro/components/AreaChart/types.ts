@@ -35,8 +35,14 @@ export interface AreaChartProps {
   showYLabels?: boolean;
   /** Animate the line drawing on mount */
   animate?: boolean;
-  /** Show a dot on each data point */
+  /** Show a dot on each data point. Lone points in mixed series always show a dot. */
   showDots?: boolean;
+  /** Replace the plot and values with loading feedback. */
+  loading?: boolean;
+  loadingMessage?: string;
+  emptyMessage?: string;
+  /** Shown when data exists but no series has at least two points. Values remain accessible. */
+  insufficientDataMessage?: string;
   /** Chart title */
   title?: string;
   className?: string;
