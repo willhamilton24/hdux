@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { usePrefersReducedMotion } from "../../hooks/usePrefersReducedMotion";
 import type {
   AnimationPhase,
   BoxAnimationMode,
@@ -41,6 +42,8 @@ interface UseBoxAnimationResult {
   traverseAxis: "none" | "vertical" | "horizontal" | "both";
   /** Whether full border lines should be visible */
   showFullBorder: boolean;
+  /** Whether the user prefers reduced motion */
+  reducedMotion: boolean;
 }
 
 export function useBoxAnimation({
@@ -49,20 +52,34 @@ export function useBoxAnimation({
   loadingAnimations,
   fullBorder,
 }: UseBoxAnimationConfig): UseBoxAnimationResult {
+  const reducedMotion = usePrefersReducedMotion();
+
   const [phase, setPhase] = useState<AnimationPhase>(() =>
     animation === "static" ? "settled" : "idle"
   );
   const timeouts = useRef<ReturnType<typeof setTimeout>[]>([]);
   const hasTransitioned = useRef(false);
+  const sequence = useRef(0);
   // Keep refs for object/optional deps so the transition effect
   // doesn't re-fire when a new object reference is passed.
   const loadingAnimationsRef = useRef(loadingAnimations);
   loadingAnimationsRef.current = loadingAnimations;
   const fullBorderRef = useRef(fullBorder);
   fullBorderRef.current = fullBorder;
+  const reducedMotionRef = useRef(reducedMotion);
+  reducedMotionRef.current = reducedMotion;
+
+  const cancelTimeouts = useCallback(() => {
+    sequence.current++;
+    timeouts.current.forEach(clearTimeout);
+    timeouts.current = [];
+  }, []);
 
   const scheduleTimeout = useCallback((fn: () => void, ms: number) => {
-    const id = setTimeout(fn, ms);
+    const currentSequence = sequence.current;
+    const id = setTimeout(() => {
+      if (currentSequence === sequence.current && !reducedMotionRef.current) fn();
+    }, ms);
     timeouts.current.push(id);
     return id;
   }, []);
@@ -73,11 +90,10 @@ export function useBoxAnimation({
   // sticks in its loading state in dev.
   useEffect(() => {
     return () => {
-      timeouts.current.forEach(clearTimeout);
-      timeouts.current = [];
+      cancelTimeouts();
       hasTransitioned.current = false;
     };
-  }, []);
+  }, [cancelTimeouts]);
 
   // Static mode: always settled
   useEffect(() => {
@@ -96,16 +112,25 @@ export function useBoxAnimation({
 
   // Trigger the transition sequence once when hasLoaded becomes true
   useEffect(() => {
-    if (animation === "static" || !hasLoaded) return;
+    if (animation === "static" || !hasLoaded) {
+      cancelTimeouts();
+      return;
+    }
+    // Preference changes must interrupt an already-started reveal, before the
+    // once-per-load guard. Keep it completed when motion is enabled again.
+    if (reducedMotion) {
+      cancelTimeouts();
+      hasTransitioned.current = true;
+      setPhase("settled");
+      return;
+    }
     if (hasTransitioned.current) return;
     hasTransitioned.current = true;
 
     const anims = loadingAnimationsRef.current;
     const border = fullBorderRef.current;
 
-    // Clear any pending timeouts from previous runs
-    timeouts.current.forEach(clearTimeout);
-    timeouts.current = [];
+    cancelTimeouts();
 
     let elapsed = 0;
 
@@ -161,25 +186,27 @@ export function useBoxAnimation({
 
     // Phase: settled
     scheduleTimeout(() => setPhase("settled"), elapsed);
-  }, [animation, hasLoaded, scheduleTimeout]);
+  }, [animation, hasLoaded, reducedMotion, cancelTimeouts, scheduleTimeout]);
 
   // Derive output from current phase
   const isLoading = phase === "idle" || phase === "loading";
   const isPreTraverse =
     isLoading || phase === "text-blink" || phase === "corner-blink-start";
 
-  // CSS classes for loading animations
+  // CSS classes for loading animations — omitted entirely when reduced motion is active
   const cssClasses: string[] = [];
-  if (isLoading && loadingAnimations) {
+  if (isLoading && loadingAnimations && !reducedMotion) {
     if (loadingAnimations.textPulse) cssClasses.push("hdux-box--text-pulse");
     if (loadingAnimations.cornerPulse) cssClasses.push("hdux-box--corner-pulse");
     if (loadingAnimations.cornerSpin) cssClasses.push("hdux-box--corner-spin");
   }
-  if (phase === "text-blink") cssClasses.push("hdux-box--text-blink");
-  if (phase === "corner-blink-start" || phase === "corner-blink-end")
-    cssClasses.push("hdux-box--corner-blink");
-  if (phase === "content-reveal" && loadingAnimations?.contentBlink)
-    cssClasses.push("hdux-box--content-blink");
+  if (!reducedMotion) {
+    if (phase === "text-blink") cssClasses.push("hdux-box--text-blink");
+    if (phase === "corner-blink-start" || phase === "corner-blink-end")
+      cssClasses.push("hdux-box--corner-blink");
+    if (phase === "content-reveal" && loadingAnimations?.contentBlink)
+      cssClasses.push("hdux-box--content-blink");
+  }
 
   // Corner positions
   const cornersAtFinal = !isPreTraverse;
@@ -222,5 +249,6 @@ export function useBoxAnimation({
     cornersAtFinal,
     traverseAxis,
     showFullBorder,
+    reducedMotion,
   };
 }
