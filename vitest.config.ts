@@ -16,6 +16,13 @@ export default defineConfig({
     projects: [
       {
         test: {
+          name: 'ssr',
+          include: ['tests/ssr.test.tsx'],
+          environment: 'node',
+        },
+      },
+      {
+        test: {
           name: 'templates',
           include: ['tests/**/*.test.tsx'],
           browser: {
