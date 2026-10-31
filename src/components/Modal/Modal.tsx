@@ -146,5 +146,6 @@ export function Modal({
     </div>
   );
 
+  if (typeof document === 'undefined') return modal;
   return createPortal(modal, document.body);
 }
